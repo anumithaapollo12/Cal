@@ -79,6 +79,7 @@ export default function CalendarGrid({
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
   const [dragStartX, setDragStartX] = useState<number | null>(null);
   const [lastMoveX, setLastMoveX] = useState<number | null>(null);
+  const [lastUpdateTime, setLastUpdateTime] = useState<number>(0);
 
   useEffect(() => {
     setViewDate(currentDate);
@@ -139,6 +140,7 @@ export default function CalendarGrid({
       if (isMobile) {
         const x = event.active.rect.current.translated?.left ?? 0;
         setDragStartX(x);
+        setLastUpdateTime(Date.now());
       }
       document.body.style.cursor = "grabbing";
     }
@@ -150,9 +152,10 @@ export default function CalendarGrid({
 
       const x = event.active.rect.current.translated?.left ?? 0;
       const diff = x - dragStartX;
+      const now = Date.now();
 
-      // Require less movement on mobile for day change
-      if (Math.abs(diff) > 20) {
+      // Require more movement on mobile for day change and add time threshold
+      if (Math.abs(diff) > 35 && now - lastUpdateTime > 150) {
         if (diff < 0) {
           // Dragging left (go back in time)
           setViewDate((prev) => subDays(prev, 1));
@@ -161,9 +164,10 @@ export default function CalendarGrid({
           setViewDate((prev) => addDays(prev, 1));
         }
         setDragStartX(x); // Reset reference point
+        setLastUpdateTime(now);
       }
     },
-    [isMobile, dragStartX]
+    [isMobile, dragStartX, lastUpdateTime]
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -172,6 +176,7 @@ export default function CalendarGrid({
     setActiveEvent(null);
     setDragStartX(null);
     setLastMoveX(null);
+    setLastUpdateTime(0);
     document.body.style.cursor = "";
 
     if (over && active.id !== over.id) {
@@ -184,6 +189,7 @@ export default function CalendarGrid({
     setActiveEvent(null);
     setDragStartX(null);
     setLastMoveX(null);
+    setLastUpdateTime(0);
     document.body.style.cursor = "";
   };
 
