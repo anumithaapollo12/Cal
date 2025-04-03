@@ -205,46 +205,80 @@ export default function CalendarGrid({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex-1 bg-white overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-7 h-[calc(100vh-4rem)] divide-y md:divide-y-0 md:divide-x divide-gray-200">
+      <div className="flex-1 bg-gradient-to-br from-white to-gray-50 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-7 h-[calc(100vh-4rem)] divide-y md:divide-y-0 md:divide-x divide-gray-200/50">
           {days.map((day) => (
-            <div
+            <motion.div
               key={day.date.toString()}
-              className={`relative flex flex-col ${
-                day.isToday ? "bg-blue-50" : ""
-              }`}
+              initial={false}
+              animate={{
+                backgroundColor: day.isToday
+                  ? "rgb(239, 246, 255)"
+                  : "transparent",
+              }}
+              className="relative flex flex-col group"
             >
-              {/* Day Header */}
-              <div className="sticky top-0 bg-white border-b border-gray-200 z-20">
-                <div className="flex items-center justify-center md:justify-start gap-2 p-4">
-                  <div className="flex flex-col items-center md:items-start">
-                    <span className="text-sm font-medium text-gray-500">
+              {/* Modern Day Header */}
+              <motion.div
+                className="sticky top-0 backdrop-blur-sm bg-white/80 border-b border-gray-200/50 z-20"
+                initial={false}
+                whileHover={{
+                  backgroundColor: "rgba(255, 255, 255, 0.95)",
+                }}
+              >
+                <div className="flex items-center justify-center md:justify-start gap-3 p-4">
+                  <motion.div
+                    className="flex flex-col items-center md:items-start"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <span className="text-sm font-medium text-gray-600">
                       {day.dayName}
                     </span>
                     <span className="text-xs text-gray-400 md:hidden">
                       {day.monthName}
                     </span>
-                  </div>
-                  <span
-                    className={`flex items-center justify-center w-8 h-8 text-xl ${
-                      day.isToday
-                        ? "rounded-full bg-blue-600 text-white"
-                        : "text-gray-900"
-                    }`}
+                  </motion.div>
+                  <motion.div
+                    className={`flex items-center justify-center w-10 h-10 rounded-xl
+                      ${
+                        day.isToday
+                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
+                          : "text-gray-900 bg-white/50 shadow-sm"
+                      }`}
+                    whileHover={{
+                      scale: 1.05,
+                      boxShadow: "0 8px 20px -4px rgba(76, 29, 149, 0.2)",
+                    }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    {day.dayNumber}
-                  </span>
+                    <span className="text-xl font-semibold">
+                      {day.dayNumber}
+                    </span>
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
 
-              {/* Events Container */}
+              {/* Events Container with Modern Styling */}
               <DroppableDay date={day.date}>
-                <div className="p-4 relative h-full">
+                <motion.div
+                  className="p-4 relative h-full"
+                  initial={false}
+                  whileHover={{
+                    backgroundColor: "rgba(249, 250, 251, 0.8)",
+                  }}
+                >
                   <SortableContext
                     items={getEventsForDay(day.date).map((e) => e.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    <div className="space-y-2">
+                    <motion.div
+                      className="space-y-3"
+                      initial={false}
+                      animate={{
+                        opacity: 1,
+                        transition: { staggerChildren: 0.1 },
+                      }}
+                    >
                       {getEventsForDay(day.date).map((event) => (
                         <EventCard
                           key={event.id}
@@ -254,55 +288,82 @@ export default function CalendarGrid({
                           onOpenDetail={onOpenDetail}
                         />
                       ))}
-                    </div>
+                    </motion.div>
                   </SortableContext>
 
                   {getEventsForDay(day.date).length === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <p className="text-sm text-gray-400">
-                        No events scheduled
+                    <motion.div
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <p className="text-sm text-gray-400/80 italic">
+                        No events yet
                       </p>
-                    </div>
+                    </motion.div>
                   )}
 
-                  {/* Add Event Button */}
+                  {/* Modern Add Event Button */}
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{
+                      scale: 1.05,
+                      boxShadow: "0 8px 20px -4px rgba(79, 70, 229, 0.3)",
+                    }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => onAddEvent(day.date)}
-                    className="absolute bottom-4 right-4 rounded-full bg-indigo-600 p-2 text-white shadow-lg hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 z-10"
+                    className="absolute bottom-4 right-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 p-2.5 text-white shadow-lg hover:from-indigo-500 hover:to-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 z-10"
                   >
-                    <svg
-                      className="h-6 w-6"
+                    <motion.svg
+                      className="h-5 w-5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
+                      initial={false}
+                      animate={{ rotate: 0 }}
+                      whileHover={{ rotate: 90 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 200,
+                        damping: 10,
+                      }}
                     >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth={2}
+                        strokeWidth={2.5}
                         d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                       />
-                    </svg>
+                    </motion.svg>
                   </motion.button>
-                </div>
+                </motion.div>
               </DroppableDay>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
 
       <DragOverlay dropAnimation={null}>
         {activeId && activeEvent ? (
-          <div className="transform scale-105 opacity-90 touch-none">
+          <motion.div
+            className="transform scale-105 opacity-90 touch-none"
+            initial={false}
+            animate={{
+              rotate: [-1, 1, -1],
+              transition: {
+                repeat: Infinity,
+                duration: 2,
+                ease: "easeInOut",
+              },
+            }}
+          >
             <EventCard
               event={activeEvent}
               onEdit={onEditEvent}
               onDelete={onDeleteEvent}
               onOpenDetail={onOpenDetail}
             />
-          </div>
+          </motion.div>
         ) : null}
       </DragOverlay>
     </DndContext>
