@@ -14,10 +14,23 @@ export default function Home() {
       setIsMobile(window.innerWidth < 768);
     };
 
+    // Initial check
     checkMobile();
-    window.addEventListener("resize", checkMobile);
 
-    return () => window.removeEventListener("resize", checkMobile);
+    // Add event listener for window resize
+    let timeoutId: NodeJS.Timeout | null = null;
+    const handleResize = () => {
+      // Debounce the resize event
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkMobile, 150);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   const handleWeekChange = (newDate: Date) => {
@@ -25,12 +38,15 @@ export default function Home() {
   };
 
   return (
-    <main className="flex flex-col h-screen">
+    <main className="flex flex-col h-screen bg-gray-50">
       <CalendarHeader
         currentDate={currentDate}
         onWeekChange={handleWeekChange}
+        isMobile={isMobile}
       />
-      <CalendarGrid currentDate={currentDate} isMobile={isMobile} />
+      <div className="flex-1 overflow-hidden">
+        <CalendarGrid currentDate={currentDate} isMobile={isMobile} />
+      </div>
     </main>
   );
 }
