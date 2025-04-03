@@ -4,7 +4,11 @@ import { useState, useEffect } from "react";
 import { Event } from "../types/Event";
 import { format, addHours, isBefore, parseISO } from "date-fns";
 import { motion } from "framer-motion";
-import { ClockIcon, SwatchIcon } from "@heroicons/react/24/outline";
+import {
+  CalendarIcon,
+  ClockIcon,
+  SwatchIcon,
+} from "@heroicons/react/24/outline";
 
 interface EventFormProps {
   initialEvent?: Event;
@@ -34,15 +38,21 @@ export default function EventForm({
   const [description, setDescription] = useState(
     initialEvent?.description || ""
   );
+
+  // Split date and time into separate states
+  const [startDate, setStartDate] = useState(
+    format(initialEvent?.startTime || selectedDate, "yyyy-MM-dd")
+  );
   const [startTime, setStartTime] = useState(
-    format(initialEvent?.startTime || selectedDate, "yyyy-MM-dd'T'HH:mm")
+    format(initialEvent?.startTime || selectedDate, "HH:mm")
+  );
+  const [endDate, setEndDate] = useState(
+    format(initialEvent?.endTime || addHours(selectedDate, 1), "yyyy-MM-dd")
   );
   const [endTime, setEndTime] = useState(
-    format(
-      initialEvent?.endTime || addHours(selectedDate, 1),
-      "yyyy-MM-dd'T'HH:mm"
-    )
+    format(initialEvent?.endTime || addHours(selectedDate, 1), "HH:mm")
   );
+
   const [color, setColor] = useState(initialEvent?.color || "#3B82F6");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -51,21 +61,29 @@ export default function EventForm({
       onSubmit({
         title,
         description,
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
+        startTime: new Date(`${startDate}T${startTime}`),
+        endTime: new Date(`${endDate}T${endTime}`),
         color,
       });
     }
   };
 
-  // Update end time when start time changes
+  // Update end date and time when start changes
   useEffect(() => {
-    const startDate = parseISO(startTime);
-    const endDate = parseISO(endTime);
-    if (isBefore(endDate, startDate)) {
-      setEndTime(format(addHours(startDate, 1), "yyyy-MM-dd'T'HH:mm"));
+    const startDateTime = parseISO(`${startDate}T${startTime}`);
+    const endDateTime = parseISO(`${endDate}T${endTime}`);
+
+    if (isBefore(endDateTime, startDateTime)) {
+      const newEndDate = addHours(startDateTime, 1);
+      setEndDate(format(newEndDate, "yyyy-MM-dd"));
+      setEndTime(format(newEndDate, "HH:mm"));
     }
-  }, [startTime]);
+  }, [startDate, startTime]);
+
+  // Keep end date in sync with start date for same-day events
+  useEffect(() => {
+    setEndDate(startDate);
+  }, [startDate]);
 
   return (
     <motion.form
@@ -103,42 +121,81 @@ export default function EventForm({
       </div>
 
       {/* Date and Time Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-4">
-              <ClockIcon className="h-5 w-5 text-gray-400" />
+      <div className="space-y-6">
+        {/* Start Date/Time */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Start
+          </label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                <CalendarIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="block w-full rounded-lg border border-gray-200 pl-12 pr-4 py-3
+                  focus:border-indigo-500 focus:ring-0 transition-colors"
+                required
+              />
             </div>
-            <input
-              type="datetime-local"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="block w-full rounded-lg border border-gray-200 pl-12 pr-4 py-3
-                focus:border-indigo-500 focus:ring-0 transition-colors"
-              required
-            />
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                <ClockIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="block w-full rounded-lg border border-gray-200 pl-12 pr-4 py-3
+                  focus:border-indigo-500 focus:ring-0 transition-colors"
+                required
+              />
+            </div>
           </div>
         </div>
 
-        <div>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-4">
-              <ClockIcon className="h-5 w-5 text-gray-400" />
+        {/* End Date/Time */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">End</label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                <CalendarIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="block w-full rounded-lg border border-gray-200 pl-12 pr-4 py-3
+                  focus:border-indigo-500 focus:ring-0 transition-colors"
+                required
+              />
             </div>
-            <input
-              type="datetime-local"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="block w-full rounded-lg border border-gray-200 pl-12 pr-4 py-3
-                focus:border-indigo-500 focus:ring-0 transition-colors"
-              required
-            />
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                <ClockIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="block w-full rounded-lg border border-gray-200 pl-12 pr-4 py-3
+                  focus:border-indigo-500 focus:ring-0 transition-colors"
+                required
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Color Selection */}
       <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Event Color
+        </label>
         <div className="flex items-center gap-3">
           {PRESET_COLORS.map((presetColor) => (
             <motion.button
