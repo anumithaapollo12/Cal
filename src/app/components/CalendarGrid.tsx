@@ -46,12 +46,17 @@ export default function CalendarGrid({
 
   // Get events for a specific day
   const getEventsForDay = (date: Date) => {
-    return events.filter((event) =>
-      isWithinInterval(date, {
-        start: new Date(event.startTime),
-        end: new Date(event.endTime),
-      })
-    );
+    return events.filter((event) => {
+      const eventStart = new Date(event.startTime);
+      const eventEnd = new Date(event.endTime);
+
+      // Check if the day contains any part of the event
+      return (
+        isSameDay(date, eventStart) ||
+        isSameDay(date, eventEnd) ||
+        (date >= eventStart && date <= eventEnd)
+      );
+    });
   };
 
   return (
