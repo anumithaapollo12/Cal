@@ -1,16 +1,32 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { format, addDays, startOfWeek, isSameDay } from "date-fns";
+import {
+  format,
+  addDays,
+  startOfWeek,
+  isSameDay,
+  isWithinInterval,
+} from "date-fns";
+import { Event } from "../types/Event";
+import { TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
 
 interface CalendarGridProps {
   currentDate: Date;
   isMobile: boolean;
+  events: Event[];
+  onAddEvent: (date: Date) => void;
+  onEditEvent: (event: Event) => void;
+  onDeleteEvent: (eventId: string) => void;
 }
 
 export default function CalendarGrid({
   currentDate,
   isMobile,
+  events,
+  onAddEvent,
+  onEditEvent,
+  onDeleteEvent,
 }: CalendarGridProps) {
   // For desktop view, start from the beginning of the week
   // For mobile view, use the current selected date
@@ -27,6 +43,16 @@ export default function CalendarGrid({
       isToday: isSameDay(date, new Date()),
     };
   });
+
+  // Get events for a specific day
+  const getEventsForDay = (date: Date) => {
+    return events.filter((event) =>
+      isWithinInterval(date, {
+        start: new Date(event.startTime),
+        end: new Date(event.endTime),
+      })
+    );
+  };
 
   return (
     <div className="flex-1 bg-white overflow-hidden">
@@ -66,16 +92,60 @@ export default function CalendarGrid({
 
             {/* Events Container */}
             <div className="flex-1 p-4 space-y-2 overflow-y-auto">
-              {/* Events will be rendered here */}
-              <div className="h-full flex items-center justify-center text-gray-400">
-                <p className="text-sm">No events scheduled</p>
-              </div>
+              {getEventsForDay(day.date).map((event) => (
+                <div
+                  key={event.id}
+                  className="group relative rounded-lg p-3 hover:shadow-md transition-shadow"
+                  style={{ backgroundColor: `${event.color}15` }}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-medium text-gray-900">
+                        {event.title}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {format(new Date(event.startTime), "h:mm a")} -{" "}
+                        {format(new Date(event.endTime), "h:mm a")}
+                      </p>
+                      {event.description && (
+                        <p className="mt-1 text-sm text-gray-600">
+                          {event.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => onEditEvent(event)}
+                        className="text-gray-400 hover:text-gray-500"
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => onDeleteEvent(event.id)}
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    className="absolute left-0 top-0 w-1 h-full rounded-l-lg"
+                    style={{ backgroundColor: event.color }}
+                  />
+                </div>
+              ))}
+              {getEventsForDay(day.date).length === 0 && (
+                <div className="h-full flex items-center justify-center text-gray-400">
+                  <p className="text-sm">No events scheduled</p>
+                </div>
+              )}
             </div>
 
             {/* Add Event Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => onAddEvent(day.date)}
               className="absolute bottom-4 right-4 rounded-full bg-indigo-600 p-2 text-white shadow-lg hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
               <svg
