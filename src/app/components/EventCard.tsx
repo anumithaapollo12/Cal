@@ -5,13 +5,21 @@ import { motion } from "framer-motion";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { Event } from "../types/Event";
-import { TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
+import {
+  TrashIcon,
+  PencilIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
+import { useRef, useCallback } from "react";
 
 interface EventCardProps {
   event: Event;
   onEdit: (event: Event) => void;
   onDelete: (eventId: string) => void;
-  onOpenDetail: (event: Event) => void;
+  onOpenDetail: (
+    event: Event,
+    position: { top: number; left: number; width: number; height: number }
+  ) => void;
 }
 
 export default function EventCard({
@@ -20,6 +28,8 @@ export default function EventCard({
   onDelete,
   onOpenDetail,
 }: EventCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
   const {
     attributes,
     listeners,
@@ -38,7 +48,16 @@ export default function EventCard({
   const handleClick = (e: React.MouseEvent) => {
     // Prevent opening detail view when clicking edit or delete buttons
     if ((e.target as HTMLElement).closest("button")) return;
-    onOpenDetail(event);
+
+    // Get the position from the event target
+    const element = e.currentTarget as HTMLElement;
+    const rect = element.getBoundingClientRect();
+    onOpenDetail(event, {
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+    });
   };
 
   const style = {
@@ -60,21 +79,41 @@ export default function EventCard({
             ? "shadow-lg opacity-50 z-50"
             : "hover:shadow-md opacity-100"
         }
-        transition-all duration-200 ease-in-out cursor-grab active:cursor-grabbing
-        hover:translate-y-[-2px] hover:bg-gray-50
-        border border-gray-100`}
+        transition-all duration-200 ease-in-out cursor-pointer
+        border border-gray-100 overflow-hidden`}
       initial={false}
       animate={{ opacity: isDragging ? 0.5 : 1 }}
       layoutId={`event-${event.id}`}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{
+        scale: 1.02,
+        backgroundColor: "rgb(249, 250, 251)",
+        y: -2,
+      }}
       whileTap={{ scale: 0.98 }}
     >
       {/* Color Bar */}
       <motion.div
         layoutId={`color-${event.id}`}
-        className="absolute left-0 top-0 w-1.5 h-full rounded-l-lg"
+        className="absolute left-0 top-0 w-1.5 h-full"
         style={{ backgroundColor: event.color }}
       />
+
+      {/* Hover Indicator */}
+      <motion.div
+        initial={false}
+        animate={{
+          opacity: 0,
+          x: "100%",
+        }}
+        whileHover={{
+          opacity: 1,
+          x: "0%",
+        }}
+        transition={{ duration: 0.2 }}
+        className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-gray-50 to-transparent flex items-center justify-center"
+      >
+        <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+      </motion.div>
 
       <div className="flex flex-col space-y-2">
         {/* Title and Actions Row */}
@@ -89,29 +128,31 @@ export default function EventCard({
           </motion.div>
 
           {/* Action Buttons */}
-          <div
-            className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            whileHover={{ opacity: 1, y: 0 }}
+            className="flex space-x-1 transition-all duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <motion.button
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.1, backgroundColor: "rgb(238, 242, 255)" }}
               whileTap={{ scale: 0.9 }}
               onClick={() => onEdit(event)}
-              className="p-1 rounded-full text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors touch-none"
+              className="p-1 rounded-full text-gray-400 hover:text-indigo-600 transition-colors touch-none"
               aria-label="Edit event"
             >
               <PencilIcon className="h-4 w-4" />
             </motion.button>
             <motion.button
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.1, backgroundColor: "rgb(254, 242, 242)" }}
               whileTap={{ scale: 0.9 }}
               onClick={() => onDelete(event.id)}
-              className="p-1 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors touch-none"
+              className="p-1 rounded-full text-gray-400 hover:text-red-600 transition-colors touch-none"
               aria-label="Delete event"
             >
               <TrashIcon className="h-4 w-4" />
             </motion.button>
-          </div>
+          </motion.div>
         </div>
 
         {/* Time Display */}
@@ -144,22 +185,28 @@ export default function EventCard({
         {/* Description */}
         {event.description && (
           <motion.div layoutId={`desc-${event.id}`} className="relative">
-            <div className="text-sm text-gray-600 line-clamp-2 group-hover:line-clamp-none transition-all">
+            <motion.div
+              initial={{ height: "3em" }}
+              whileHover={{ height: "auto" }}
+              className="text-sm text-gray-600 overflow-hidden"
+            >
               {event.description}
-            </div>
-            {event.description.length > 150 && (
-              <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white group-hover:from-gray-50 transition-colors" />
-            )}
+            </motion.div>
+            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white group-hover:from-gray-50 transition-colors" />
           </motion.div>
         )}
 
         {/* Duration Indicator */}
-        <div className="absolute bottom-0 left-1.5 right-1.5 h-0.5 rounded-full overflow-hidden">
+        <motion.div
+          className="absolute bottom-0 left-1.5 right-1.5 h-0.5 rounded-full overflow-hidden"
+          initial={{ opacity: 0.2 }}
+          whileHover={{ opacity: 0.4 }}
+        >
           <div
-            className="h-full opacity-20 transition-colors"
+            className="h-full transition-colors"
             style={{ backgroundColor: event.color || "#3B82F6" }}
           />
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   );

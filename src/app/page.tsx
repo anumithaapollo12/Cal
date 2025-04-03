@@ -17,6 +17,15 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [cardPosition, setCardPosition] = useState<
+    | {
+        top: number;
+        left: number;
+        width: number;
+        height: number;
+      }
+    | undefined
+  >(undefined);
 
   useEffect(() => {
     // Check if we're on mobile
@@ -104,8 +113,12 @@ export default function Home() {
     );
   };
 
-  const handleOpenDetail = (event: Event) => {
+  const handleOpenDetail = (
+    event: Event,
+    position?: { top: number; left: number; width: number; height: number }
+  ) => {
     setSelectedEvent(event);
+    setCardPosition(position);
   };
 
   return (
@@ -151,7 +164,11 @@ export default function Home() {
 
       <EventDetail
         event={selectedEvent}
-        onClose={() => setSelectedEvent(null)}
+        onClose={() => {
+          setSelectedEvent(null);
+          setCardPosition(undefined);
+        }}
+        cardPosition={cardPosition}
       />
     </main>
   );

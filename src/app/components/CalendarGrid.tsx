@@ -39,7 +39,10 @@ interface CalendarGridProps {
   onEditEvent: (event: Event) => void;
   onDeleteEvent: (eventId: string) => void;
   onEventMove: (eventId: string, newDate: Date) => void;
-  onOpenDetail: (event: Event) => void;
+  onOpenDetail: (
+    event: Event,
+    position?: { top: number; left: number; width: number; height: number }
+  ) => void;
 }
 
 function DroppableDay({
