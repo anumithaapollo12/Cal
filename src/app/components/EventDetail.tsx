@@ -94,19 +94,63 @@ export default function EventDetail({
           className="bg-white rounded-lg shadow-2xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Parallax Background */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white"
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
-            transition={{ duration: 0.3 }}
-          />
+          {/* Event Image */}
+          {event.image && (
+            <motion.div
+              layoutId={`image-container-${event.id}`}
+              className="relative w-full h-48 md:h-64 overflow-hidden"
+            >
+              <motion.img
+                layoutId={`image-${event.id}`}
+                src={event.image}
+                alt={event.imageAlt || event.title}
+                className="w-full h-full object-cover"
+              />
+              <motion.div
+                layoutId={`image-overlay-${event.id}`}
+                className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60"
+              />
+              <motion.div
+                className="absolute inset-x-0 bottom-0 p-6"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <motion.h2
+                  layoutId={`title-${event.id}`}
+                  className="text-2xl font-semibold text-white mb-2"
+                  transition={{ type: "spring", stiffness: 250, damping: 25 }}
+                >
+                  {event.title}
+                </motion.h2>
+                <motion.div
+                  layoutId={`time-${event.id}`}
+                  className="flex items-center gap-2 text-white/90"
+                >
+                  <CalendarIcon className="h-5 w-5 text-white/70" />
+                  <span>
+                    {format(new Date(event.startTime), "EEEE, MMMM d, yyyy")}
+                  </span>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* Parallax Background - Only show when no image */}
+          {!event.image && (
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white"
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.1 }}
+              transition={{ duration: 0.3 }}
+            />
+          )}
 
           {/* Enhanced Color Bar */}
           <motion.div
             layoutId={`color-${event.id}`}
-            className="absolute left-0 top-0 w-1.5 h-full"
+            className="absolute left-0 top-0 w-1.5 h-full z-10"
             style={{ backgroundColor: event.color }}
             initial={{ height: "100%" }}
             animate={{ height: "120%", top: "-10%" }}
@@ -114,57 +158,98 @@ export default function EventDetail({
           />
 
           <motion.div
-            className="relative p-6"
+            className={`relative p-6 ${event.image ? "pt-0" : ""}`}
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
           >
-            {/* Header with Parallax */}
-            <motion.div
-              className="flex justify-between items-start mb-6"
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <motion.h2
-                layoutId={`title-${event.id}`}
-                className="text-2xl font-semibold text-gray-900"
-                transition={{ type: "spring", stiffness: 250, damping: 25 }}
+            {/* Header */}
+            {!event.image && (
+              <motion.div
+                className="flex justify-between items-start mb-6"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
               >
-                {event.title}
-              </motion.h2>
+                <motion.h2
+                  layoutId={`title-${event.id}`}
+                  className="text-2xl font-semibold text-gray-900"
+                  transition={{ type: "spring", stiffness: 250, damping: 25 }}
+                >
+                  {event.title}
+                </motion.h2>
+                <motion.button
+                  whileHover={{
+                    scale: 1.1,
+                    backgroundColor: "rgb(243, 244, 246)",
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onClose}
+                  className="text-gray-400 hover:text-gray-500 rounded-full p-1 -mr-1"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </motion.button>
+              </motion.div>
+            )}
+
+            {/* Close button for image variant */}
+            {event.image && (
               <motion.button
                 whileHover={{
                   scale: 1.1,
-                  backgroundColor: "rgb(243, 244, 246)",
+                  backgroundColor: "rgba(0, 0, 0, 0.3)",
                 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-500 rounded-full p-1 -mr-1"
+                className="absolute top-4 right-4 text-white/90 hover:text-white 
+                  rounded-full p-1.5 bg-black/20 backdrop-blur-sm"
               >
                 <XMarkIcon className="h-6 w-6" />
               </motion.button>
-            </motion.div>
+            )}
 
-            {/* Time Information with Parallax */}
-            <motion.div
-              className="space-y-3 mb-6"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
+            {/* Time Information */}
+            {!event.image && (
               <motion.div
-                className="flex items-center gap-2 text-gray-600"
-                whileHover={{ x: 2 }}
+                className="space-y-3 mb-6"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
               >
-                <CalendarIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                <span className="font-medium">
-                  {format(new Date(event.startTime), "EEEE, MMMM d, yyyy")}
-                </span>
+                <motion.div
+                  className="flex items-center gap-2 text-gray-600"
+                  whileHover={{ x: 2 }}
+                >
+                  <CalendarIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                  <span className="font-medium">
+                    {format(new Date(event.startTime), "EEEE, MMMM d, yyyy")}
+                  </span>
+                </motion.div>
+                <motion.div
+                  className="flex items-center gap-2 text-gray-600"
+                  whileHover={{ x: 2 }}
+                >
+                  <ClockIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                  <div>
+                    <span className="font-medium">
+                      {format(new Date(event.startTime), "h:mm a")}
+                    </span>
+                    <span className="mx-2">-</span>
+                    <span className="font-medium">
+                      {format(new Date(event.endTime), "h:mm a")}
+                    </span>
+                  </div>
+                </motion.div>
               </motion.div>
+            )}
+
+            {/* Time (for image variant) */}
+            {event.image && (
               <motion.div
-                className="flex items-center gap-2 text-gray-600"
-                whileHover={{ x: 2 }}
+                className="flex items-center gap-2 text-gray-600 mb-6"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
               >
                 <ClockIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
                 <div>
@@ -177,9 +262,9 @@ export default function EventDetail({
                   </span>
                 </div>
               </motion.div>
-            </motion.div>
+            )}
 
-            {/* Description with Parallax */}
+            {/* Description */}
             {event.description && (
               <motion.div
                 layoutId={`desc-${event.id}`}

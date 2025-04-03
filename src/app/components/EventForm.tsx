@@ -8,6 +8,8 @@ import {
   CalendarIcon,
   ClockIcon,
   SwatchIcon,
+  PhotoIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 interface EventFormProps {
@@ -38,6 +40,8 @@ export default function EventForm({
   const [description, setDescription] = useState(
     initialEvent?.description || ""
   );
+  const [image, setImage] = useState(initialEvent?.image || "");
+  const [imageAlt, setImageAlt] = useState(initialEvent?.imageAlt || "");
 
   // Split date and time into separate states
   const [startDate, setStartDate] = useState(
@@ -64,6 +68,8 @@ export default function EventForm({
         startTime: new Date(`${startDate}T${startTime}`),
         endTime: new Date(`${endDate}T${endTime}`),
         color,
+        image: image || undefined,
+        imageAlt: imageAlt || undefined,
       });
     }
   };
@@ -105,6 +111,62 @@ export default function EventForm({
           placeholder="Event title"
           required
         />
+      </div>
+
+      {/* Image Input */}
+      <div className="space-y-4">
+        <label className="block text-sm font-medium text-gray-700">
+          Event Image
+        </label>
+        <div className="relative">
+          {image ? (
+            <div className="relative rounded-lg overflow-hidden">
+              <motion.img
+                src={image}
+                alt={imageAlt || title}
+                className="w-full h-48 object-cover"
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              />
+              <motion.button
+                type="button"
+                onClick={() => setImage("")}
+                className="absolute top-2 right-2 p-1.5 rounded-full bg-black/20 text-white/90 
+                  hover:bg-black/30 hover:text-white backdrop-blur-sm transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </motion.button>
+              <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
+                <input
+                  type="text"
+                  value={imageAlt}
+                  onChange={(e) => setImageAlt(e.target.value)}
+                  className="w-full bg-transparent border-0 text-white placeholder:text-white/70
+                    focus:ring-0 text-sm"
+                  placeholder="Add image description for accessibility"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="relative">
+              <input
+                type="url"
+                value={image}
+                onChange={(e) => setImage(e.target.value)}
+                className="block w-full pr-12 rounded-lg border border-gray-200 
+                  focus:border-indigo-500 focus:ring-0 transition-colors p-3
+                  placeholder:text-gray-400"
+                placeholder="Paste image URL"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                <PhotoIcon className="w-5 h-5 text-gray-400" />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Description Input */}

@@ -5,11 +5,7 @@ import { motion } from "framer-motion";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { Event } from "../types/Event";
-import {
-  TrashIcon,
-  PencilIcon,
-  ChevronRightIcon,
-} from "@heroicons/react/24/outline";
+import { TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { useRef, useCallback, memo } from "react";
 
 interface EventCardProps {
@@ -77,23 +73,21 @@ const EventCard = memo(function EventCard({
       {...attributes}
       {...listeners}
       onClick={handleClick}
-      className={`group relative rounded-xl p-4 bg-white select-none touch-none
+      className={`group relative rounded-2xl select-none touch-none
         ${
           isDragging
             ? "shadow-lg opacity-50 z-50"
             : "shadow-sm hover:shadow-xl opacity-100"
         }
         transition-all duration-300 ease-out cursor-pointer
-        border-0 overflow-hidden backdrop-blur-sm bg-white/90`}
+        border border-gray-100 overflow-hidden bg-white`}
       initial={false}
       animate={{ opacity: isDragging ? 0.5 : 1 }}
       layoutId={`event-${event.id}`}
       whileHover={
         isInteractive
           ? {
-              scale: 1.02,
-              backgroundColor: "rgba(255, 255, 255, 0.95)",
-              y: -2,
+              y: -4,
               transition: { type: "spring", stiffness: 400, damping: 25 },
             }
           : undefined
@@ -107,110 +101,137 @@ const EventCard = memo(function EventCard({
           : undefined
       }
     >
-      {!isDragging && (
+      {/* Event Image */}
+      {event.image && !isDragging && (
         <motion.div
-          className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        />
+          layoutId={`image-container-${event.id}`}
+          className="relative aspect-[16/9] w-full overflow-hidden"
+        >
+          <motion.img
+            layoutId={`image-${event.id}`}
+            src={event.image}
+            alt={event.imageAlt || event.title}
+            className="w-full h-full object-cover"
+          />
+          <motion.div
+            layoutId={`image-overlay-${event.id}`}
+            className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"
+          />
+          {/* Action Buttons */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute top-3 right-3 flex gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <motion.button
+              onClick={() => onEdit(event)}
+              className="p-2 rounded-full bg-white/90 hover:bg-white text-gray-700 hover:text-gray-900
+                shadow-sm backdrop-blur-sm transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <PencilIcon className="h-4 w-4" />
+            </motion.button>
+            <motion.button
+              onClick={() => onDelete(event.id)}
+              className="p-2 rounded-full bg-white/90 hover:bg-white text-gray-700 hover:text-red-600
+                shadow-sm backdrop-blur-sm transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <TrashIcon className="h-4 w-4" />
+            </motion.button>
+          </motion.div>
+        </motion.div>
       )}
 
+      {/* Content Container */}
       <motion.div
-        layoutId={`color-${event.id}`}
-        className="absolute left-0 top-0 w-1 h-full rounded-full"
+        className={`relative p-4 ${event.image ? "" : "pt-3"}`}
         style={{
-          background: `linear-gradient(to bottom, ${event.color}, ${event.color}88)`,
-          boxShadow: isDragging ? "none" : `0 0 10px ${event.color}33`,
+          borderLeft: `4px solid ${event.color}`,
         }}
-      />
-
-      <motion.div className="relative z-10">
-        <div className="flex flex-col space-y-2.5">
-          <div className="flex items-start justify-between">
-            <motion.div className="flex-1 min-w-0 pr-2">
-              <motion.h3
-                layoutId={`title-${event.id}`}
-                className="font-semibold text-gray-800 truncate text-base group-hover:text-indigo-600 transition-colors"
-              >
-                {event.title}
-              </motion.h3>
-            </motion.div>
-
-            {!isDragging && (
-              <motion.div
-                className="flex space-x-1.5 transition-all duration-200"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <motion.button
-                  onClick={() => onEdit(event)}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 transition-colors touch-none bg-white/50 backdrop-blur-sm"
-                  aria-label="Edit event"
-                >
-                  <PencilIcon className="h-3.5 w-3.5" />
-                </motion.button>
-                <motion.button
-                  onClick={() => onDelete(event.id)}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 transition-colors touch-none bg-white/50 backdrop-blur-sm"
-                  aria-label="Delete event"
-                >
-                  <TrashIcon className="h-3.5 w-3.5" />
-                </motion.button>
-              </motion.div>
-            )}
-          </div>
-
-          <motion.div
-            layoutId={`time-${event.id}`}
-            className="flex items-center text-sm text-gray-500"
-          >
-            <div className="flex items-center gap-1.5">
-              <svg
-                className="h-4 w-4 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span className="font-medium text-gray-600">
-                {format(new Date(event.startTime), "h:mm a")}
-              </span>
-              <span className="mx-1 text-gray-400">→</span>
-              <span className="font-medium text-gray-600">
-                {format(new Date(event.endTime), "h:mm a")}
-              </span>
-            </div>
+      >
+        {/* Title and Actions Row */}
+        <div className="flex items-start justify-between mb-2">
+          <motion.div className="flex-1 min-w-0">
+            <motion.h3
+              layoutId={`title-${event.id}`}
+              className="font-medium text-base text-gray-900 leading-tight"
+            >
+              {event.title}
+            </motion.h3>
           </motion.div>
 
-          {!isDragging && event.description && (
-            <motion.div layoutId={`desc-${event.id}`} className="relative">
-              <motion.div
-                className="text-sm text-gray-500 overflow-hidden leading-relaxed"
-                style={{ height: "3em" }}
+          {/* Action Buttons (when no image) */}
+          {!isDragging && !event.image && (
+            <motion.div
+              className="flex gap-1.5 ml-3"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <motion.button
+                onClick={() => onEdit(event)}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600
+                  hover:bg-gray-50 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {event.description}
-              </motion.div>
-              <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white via-white/80 to-transparent" />
+                <PencilIcon className="h-3.5 w-3.5" />
+              </motion.button>
+              <motion.button
+                onClick={() => onDelete(event.id)}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-red-600
+                  hover:bg-red-50 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <TrashIcon className="h-3.5 w-3.5" />
+              </motion.button>
             </motion.div>
           )}
         </div>
-      </motion.div>
 
-      {!isDragging && (
+        {/* Time Display */}
         <motion.div
-          className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full overflow-hidden"
-          style={{
-            opacity: 0.2,
-            background: `linear-gradient(to right, ${event.color}66, ${event.color})`,
-          }}
-        />
-      )}
+          layoutId={`time-${event.id}`}
+          className="flex items-center text-sm text-gray-500 mb-2"
+        >
+          <div className="flex items-center gap-1.5">
+            <svg
+              className="h-4 w-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="font-medium text-gray-600">
+              {format(new Date(event.startTime), "h:mm a")}
+            </span>
+            <span className="text-gray-400 mx-0.5">→</span>
+            <span className="font-medium text-gray-600">
+              {format(new Date(event.endTime), "h:mm a")}
+            </span>
+          </div>
+        </motion.div>
+
+        {/* Description */}
+        {!isDragging && event.description && (
+          <motion.div
+            layoutId={`desc-${event.id}`}
+            className="text-sm text-gray-500 line-clamp-2 leading-relaxed"
+          >
+            {event.description}
+          </motion.div>
+        )}
+      </motion.div>
     </motion.div>
   );
 });
