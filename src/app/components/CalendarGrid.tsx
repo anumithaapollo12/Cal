@@ -154,11 +154,11 @@ export default function CalendarGrid({
       // Require less movement on mobile for day change
       if (Math.abs(diff) > 20) {
         if (diff < 0) {
-          // Dragging left
-          setViewDate((prev) => addDays(prev, 1));
-        } else {
-          // Dragging right
+          // Dragging left (go back in time)
           setViewDate((prev) => subDays(prev, 1));
+        } else {
+          // Dragging right (go forward in time)
+          setViewDate((prev) => addDays(prev, 1));
         }
         setDragStartX(x); // Reset reference point
       }
