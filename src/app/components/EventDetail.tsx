@@ -6,6 +6,7 @@ import {
   XMarkIcon,
   ClockIcon,
   CalendarIcon,
+  MapPinIcon,
 } from "@heroicons/react/24/outline";
 import { Event } from "../types/Event";
 
@@ -29,7 +30,7 @@ export default function EventDetail({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-50"
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
         onClick={onClose}
       >
         <motion.div
@@ -43,13 +44,12 @@ export default function EventDetail({
                   height: cardPosition.height,
                   scale: 1,
                   transformOrigin: "center",
-                  borderRadius: "0.5rem",
+                  borderRadius: "1rem",
                 }
               : {
                   opacity: 0,
                   scale: 0.95,
                   y: 20,
-                  transformOrigin: "center",
                 }
           }
           animate={{
@@ -63,8 +63,7 @@ export default function EventDetail({
             y: "-50%",
             scale: 1,
             opacity: 1,
-            transformOrigin: "center",
-            borderRadius: "0.5rem",
+            borderRadius: "1rem",
           }}
           exit={
             cardPosition
@@ -76,8 +75,7 @@ export default function EventDetail({
                   height: cardPosition.height,
                   scale: 1,
                   opacity: 0,
-                  transformOrigin: "center",
-                  borderRadius: "0.5rem",
+                  borderRadius: "1rem",
                 }
               : {
                   opacity: 0,
@@ -87,18 +85,17 @@ export default function EventDetail({
           }
           transition={{
             type: "spring",
-            damping: 25,
-            stiffness: 250,
-            mass: 0.5,
+            damping: 30,
+            stiffness: 300,
           }}
-          className="bg-white rounded-lg shadow-2xl overflow-hidden"
+          className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Event Image */}
           {event.image && (
             <motion.div
               layoutId={`image-container-${event.id}`}
-              className="relative w-full h-48 md:h-64 overflow-hidden"
+              className="relative w-full aspect-[16/9] overflow-hidden bg-gray-100"
             >
               <motion.img
                 layoutId={`image-${event.id}`}
@@ -108,199 +105,99 @@ export default function EventDetail({
               />
               <motion.div
                 layoutId={`image-overlay-${event.id}`}
-                className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60"
+                className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"
               />
-              <motion.div
-                className="absolute inset-x-0 bottom-0 p-6"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <motion.h2
-                  layoutId={`title-${event.id}`}
-                  className="text-2xl font-semibold text-white mb-2"
-                  transition={{ type: "spring", stiffness: 250, damping: 25 }}
-                >
-                  {event.title}
-                </motion.h2>
-                <motion.div
-                  layoutId={`time-${event.id}`}
-                  className="flex items-center gap-2 text-white/90"
-                >
-                  <CalendarIcon className="h-5 w-5 text-white/70" />
-                  <span>
-                    {format(new Date(event.startTime), "EEEE, MMMM d, yyyy")}
-                  </span>
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          )}
-
-          {/* Parallax Background - Only show when no image */}
-          {!event.image && (
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white"
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.1 }}
-              transition={{ duration: 0.3 }}
-            />
-          )}
-
-          {/* Enhanced Color Bar */}
-          <motion.div
-            layoutId={`color-${event.id}`}
-            className="absolute left-0 top-0 w-1.5 h-full z-10"
-            style={{ backgroundColor: event.color }}
-            initial={{ height: "100%" }}
-            animate={{ height: "120%", top: "-10%" }}
-            transition={{ type: "spring", stiffness: 250, damping: 25 }}
-          />
-
-          <motion.div
-            className={`relative p-6 ${event.image ? "pt-0" : ""}`}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-          >
-            {/* Header */}
-            {!event.image && (
-              <motion.div
-                className="flex justify-between items-start mb-6"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <motion.h2
-                  layoutId={`title-${event.id}`}
-                  className="text-2xl font-semibold text-gray-900"
-                  transition={{ type: "spring", stiffness: 250, damping: 25 }}
-                >
-                  {event.title}
-                </motion.h2>
-                <motion.button
-                  whileHover={{
-                    scale: 1.1,
-                    backgroundColor: "rgb(243, 244, 246)",
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={onClose}
-                  className="text-gray-400 hover:text-gray-500 rounded-full p-1 -mr-1"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </motion.button>
-              </motion.div>
-            )}
-
-            {/* Close button for image variant */}
-            {event.image && (
               <motion.button
                 whileHover={{
-                  scale: 1.1,
-                  backgroundColor: "rgba(0, 0, 0, 0.3)",
+                  scale: 1.05,
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
                 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onClose}
-                className="absolute top-4 right-4 text-white/90 hover:text-white 
-                  rounded-full p-1.5 bg-black/20 backdrop-blur-sm"
+                className="absolute top-4 left-4 p-2 rounded-full bg-black/30 text-white/90
+                  backdrop-blur-sm transition-colors"
               >
-                <XMarkIcon className="h-6 w-6" />
+                <XMarkIcon className="h-5 w-5" />
+              </motion.button>
+            </motion.div>
+          )}
+
+          <motion.div
+            className="relative p-6"
+            style={{
+              borderLeft: `4px solid ${event.color}`,
+            }}
+          >
+            {/* Close button when no image */}
+            {!event.image && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 rounded-full text-gray-400
+                  hover:text-gray-500 hover:bg-gray-50 transition-colors"
+              >
+                <XMarkIcon className="h-5 w-5" />
               </motion.button>
             )}
 
-            {/* Time Information */}
-            {!event.image && (
-              <motion.div
-                className="space-y-3 mb-6"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
+            {/* Title */}
+            <motion.div className="mb-6">
+              <motion.h2
+                layoutId={`title-${event.id}`}
+                className="text-2xl font-semibold text-gray-900 mb-2"
               >
-                <motion.div
-                  className="flex items-center gap-2 text-gray-600"
-                  whileHover={{ x: 2 }}
-                >
-                  <CalendarIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                  <span className="font-medium">
-                    {format(new Date(event.startTime), "EEEE, MMMM d, yyyy")}
-                  </span>
-                </motion.div>
-                <motion.div
-                  className="flex items-center gap-2 text-gray-600"
-                  whileHover={{ x: 2 }}
-                >
-                  <ClockIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                  <div>
-                    <span className="font-medium">
-                      {format(new Date(event.startTime), "h:mm a")}
-                    </span>
-                    <span className="mx-2">-</span>
-                    <span className="font-medium">
-                      {format(new Date(event.endTime), "h:mm a")}
-                    </span>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
+                {event.title}
+              </motion.h2>
+            </motion.div>
 
-            {/* Time (for image variant) */}
-            {event.image && (
+            {/* Time and Date Information */}
+            <motion.div className="space-y-4 mb-8">
               <motion.div
-                className="flex items-center gap-2 text-gray-600 mb-6"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
+                layoutId={`time-${event.id}`}
+                className="flex items-center gap-3 text-gray-600"
               >
                 <ClockIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                <div>
+                <div className="flex items-center gap-2">
                   <span className="font-medium">
                     {format(new Date(event.startTime), "h:mm a")}
                   </span>
-                  <span className="mx-2">-</span>
+                  <span className="text-gray-400">→</span>
                   <span className="font-medium">
                     {format(new Date(event.endTime), "h:mm a")}
                   </span>
                 </div>
               </motion.div>
-            )}
+
+              <motion.div className="flex items-center gap-3 text-gray-600">
+                <CalendarIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                <span className="font-medium">
+                  {format(new Date(event.startTime), "EEEE, MMMM d, yyyy")}
+                </span>
+              </motion.div>
+
+              {event.location && (
+                <motion.div className="flex items-center gap-3 text-gray-600">
+                  <MapPinIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                  <span className="font-medium">{event.location}</span>
+                </motion.div>
+              )}
+            </motion.div>
 
             {/* Description */}
             {event.description && (
-              <motion.div
-                layoutId={`desc-${event.id}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="space-y-2"
-              >
-                <motion.h3
-                  className="text-lg font-medium text-gray-900"
-                  whileHover={{ x: 2 }}
-                >
-                  Description
+              <motion.div layoutId={`desc-${event.id}`} className="space-y-3">
+                <motion.h3 className="text-lg font-medium text-gray-900">
+                  About this event
                 </motion.h3>
-                <motion.div
-                  className="bg-gray-50 rounded-lg p-4 transform-gpu"
-                  whileHover={{ scale: 1.01 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                >
-                  <p className="text-gray-600 whitespace-pre-wrap">
+                <motion.div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">
                     {event.description}
                   </p>
                 </motion.div>
               </motion.div>
             )}
           </motion.div>
-
-          {/* Enhanced Bottom Color Indicator */}
-          <motion.div
-            className="absolute bottom-0 left-0 right-0 h-1"
-            style={{ backgroundColor: event.color }}
-            initial={{ opacity: 0.3, scaleX: 0.98 }}
-            animate={{ opacity: 0.3, scaleX: 1 }}
-            whileHover={{ opacity: 0.5, scaleX: 1.02 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          />
         </motion.div>
       </motion.div>
     </AnimatePresence>
