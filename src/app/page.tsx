@@ -6,6 +6,7 @@ import CalendarHeader from "./components/CalendarHeader";
 import CalendarGrid from "./components/CalendarGrid";
 import Modal from "./components/Modal";
 import EventForm from "./components/EventForm";
+import EventDetail from "./components/EventDetail";
 import { Event } from "./types/Event";
 
 export default function Home() {
@@ -15,6 +16,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     // Check if we're on mobile
@@ -77,6 +79,35 @@ export default function Home() {
     setSelectedDate(null);
   };
 
+  const handleEventMove = (eventId: string, newDate: Date) => {
+    setEvents(
+      events.map((event) => {
+        if (event.id === eventId) {
+          const startDate = new Date(event.startTime);
+          const endDate = new Date(event.endTime);
+          const duration = endDate.getTime() - startDate.getTime();
+
+          const newStartDate = new Date(newDate);
+          newStartDate.setHours(startDate.getHours());
+          newStartDate.setMinutes(startDate.getMinutes());
+
+          const newEndDate = new Date(newStartDate.getTime() + duration);
+
+          return {
+            ...event,
+            startTime: newStartDate,
+            endTime: newEndDate,
+          };
+        }
+        return event;
+      })
+    );
+  };
+
+  const handleOpenDetail = (event: Event) => {
+    setSelectedEvent(event);
+  };
+
   return (
     <main className="flex flex-col h-screen bg-gray-50">
       <CalendarHeader
@@ -92,6 +123,8 @@ export default function Home() {
           onAddEvent={handleAddEvent}
           onEditEvent={handleEditEvent}
           onDeleteEvent={handleDeleteEvent}
+          onEventMove={handleEventMove}
+          onOpenDetail={handleOpenDetail}
         />
       </div>
 
@@ -115,6 +148,11 @@ export default function Home() {
           }}
         />
       </Modal>
+
+      <EventDetail
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+      />
     </main>
   );
 }
