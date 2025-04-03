@@ -28,6 +28,7 @@ export default function EventDetail({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
         className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-50"
         onClick={onClose}
       >
@@ -41,11 +42,14 @@ export default function EventDetail({
                   width: cardPosition.width,
                   height: cardPosition.height,
                   scale: 1,
+                  transformOrigin: "center",
+                  borderRadius: "0.5rem",
                 }
               : {
                   opacity: 0,
-                  scale: 0.9,
+                  scale: 0.95,
                   y: 20,
+                  transformOrigin: "center",
                 }
           }
           animate={{
@@ -53,12 +57,14 @@ export default function EventDetail({
             top: "50%",
             left: "50%",
             width: "100%",
+            maxWidth: "32rem",
             height: "auto",
             x: "-50%",
             y: "-50%",
-            maxWidth: "32rem",
             scale: 1,
             opacity: 1,
+            transformOrigin: "center",
+            borderRadius: "0.5rem",
           }}
           exit={
             cardPosition
@@ -70,17 +76,20 @@ export default function EventDetail({
                   height: cardPosition.height,
                   scale: 1,
                   opacity: 0,
+                  transformOrigin: "center",
+                  borderRadius: "0.5rem",
                 }
               : {
                   opacity: 0,
-                  scale: 0.9,
+                  scale: 0.95,
                   y: 20,
                 }
           }
           transition={{
             type: "spring",
-            damping: 30,
-            stiffness: 300,
+            damping: 25,
+            stiffness: 250,
+            mass: 0.5,
           }}
           className="bg-white rounded-lg shadow-2xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}

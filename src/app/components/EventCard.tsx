@@ -88,6 +88,7 @@ export default function EventCard({
         scale: 1.02,
         backgroundColor: "rgb(249, 250, 251)",
         y: -2,
+        transition: { type: "spring", stiffness: 400, damping: 25 },
       }}
       whileTap={{ scale: 0.98 }}
     >
@@ -96,6 +97,7 @@ export default function EventCard({
         layoutId={`color-${event.id}`}
         className="absolute left-0 top-0 w-1.5 h-full"
         style={{ backgroundColor: event.color }}
+        transition={{ type: "spring", stiffness: 250, damping: 25 }}
       />
 
       {/* Hover Indicator */}
@@ -109,7 +111,12 @@ export default function EventCard({
           opacity: 1,
           x: "0%",
         }}
-        transition={{ duration: 0.2 }}
+        transition={{
+          duration: 0.2,
+          type: "spring",
+          stiffness: 400,
+          damping: 25,
+        }}
         className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-gray-50 to-transparent flex items-center justify-center"
       >
         <ChevronRightIcon className="h-5 w-5 text-gray-400" />
@@ -122,6 +129,7 @@ export default function EventCard({
             <motion.h3
               layoutId={`title-${event.id}`}
               className="font-semibold text-gray-900 truncate text-base group-hover:text-indigo-600 transition-colors"
+              transition={{ type: "spring", stiffness: 250, damping: 25 }}
             >
               {event.title}
             </motion.h3>
@@ -131,6 +139,12 @@ export default function EventCard({
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             whileHover={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.2,
+              type: "spring",
+              stiffness: 400,
+              damping: 25,
+            }}
             className="flex space-x-1 transition-all duration-200"
             onClick={(e) => e.stopPropagation()}
           >
