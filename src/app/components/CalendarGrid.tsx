@@ -7,6 +7,7 @@ import {
   startOfWeek,
   isSameDay,
   isWithinInterval,
+  subDays,
 } from "date-fns";
 import { Event } from "../types/Event";
 import { TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
@@ -20,14 +21,15 @@ import {
   TouchSensor,
   DragStartEvent,
   DragEndEvent,
-  DragOverEvent,
   useDroppable,
+  pointerWithin,
+  DragMoveEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useState } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 
 interface CalendarGridProps {
   currentDate: Date;
@@ -41,26 +43,23 @@ interface CalendarGridProps {
 }
 
 function DroppableDay({
-  day,
+  date,
   children,
-  className,
 }: {
-  day: {
-    date: Date;
-    dayName: string;
-    dayNumber: string;
-    monthName: string;
-    isToday: boolean;
-  };
+  date: Date;
   children: React.ReactNode;
-  className?: string;
 }) {
-  const { setNodeRef } = useDroppable({
-    id: day.date.toString(),
+  const { setNodeRef, isOver } = useDroppable({
+    id: date.toString(),
   });
 
   return (
-    <div ref={setNodeRef} className={className}>
+    <div
+      ref={setNodeRef}
+      className={`flex-1 h-full transition-colors ${
+        isOver ? "bg-blue-50" : ""
+      }`}
+    >
       {children}
     </div>
   );
@@ -78,76 +77,130 @@ export default function CalendarGrid({
 }: CalendarGridProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
+  const [dragStartX, setDragStartX] = useState<number | null>(null);
+  const [lastMoveX, setLastMoveX] = useState<number | null>(null);
 
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 5,
-      },
-    })
-  );
+  useEffect(() => {
+    setViewDate(currentDate);
+  }, [currentDate]);
 
-  const startDate = isMobile ? currentDate : startOfWeek(currentDate);
+  const [viewDate, setViewDate] = useState(currentDate);
 
-  const days = Array.from({ length: isMobile ? 1 : 7 }, (_, i) => {
-    const date = addDays(startDate, i);
-    return {
-      date,
-      dayName: format(date, "EEE"),
-      dayNumber: format(date, "d"),
-      monthName: format(date, "MMM"),
-      isToday: isSameDay(date, new Date()),
-    };
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 4,
+    },
   });
 
-  const getEventsForDay = (date: Date) => {
-    return events.filter((event) => {
-      const eventStart = new Date(event.startTime);
-      const eventEnd = new Date(event.endTime);
-      return (
-        isSameDay(date, eventStart) ||
-        isSameDay(date, eventEnd) ||
-        (date >= eventStart && date <= eventEnd)
-      );
-    });
-  };
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 250,
+      tolerance: 0,
+      distance: 0,
+    },
+  });
+
+  const sensors = useSensors(mouseSensor, isMobile ? touchSensor : null);
+
+  const startDate = isMobile ? viewDate : startOfWeek(currentDate);
+
+  // Memoize days calculation
+  const days = useMemo(
+    () =>
+      Array.from({ length: isMobile ? 1 : 7 }, (_, i) => {
+        const date = addDays(startDate, i);
+        return {
+          date,
+          dayName: format(date, "EEE"),
+          dayNumber: format(date, "d"),
+          monthName: format(date, "MMM"),
+          isToday: isSameDay(date, new Date()),
+        };
+      }),
+    [startDate, isMobile]
+  );
+
+  // Memoize events per day
+  const getEventsForDay = useMemo(
+    () => (date: Date) => {
+      return events.filter((event) => {
+        const eventStart = new Date(event.startTime);
+        return isSameDay(date, eventStart);
+      });
+    },
+    [events]
+  );
 
   const handleDragStart = (event: DragStartEvent) => {
     const draggedEvent = events.find((e) => e.id === event.active.id);
-    setActiveId(event.active.id as string);
-    setActiveEvent(draggedEvent || null);
+    if (draggedEvent) {
+      setActiveId(event.active.id as string);
+      setActiveEvent(draggedEvent);
+      if (isMobile) {
+        const x = event.active.rect.current.translated?.left ?? 0;
+        setDragStartX(x);
+      }
+      document.body.style.cursor = "grabbing";
+    }
   };
+
+  const handleDragMove = useCallback(
+    (event: DragMoveEvent) => {
+      if (!isMobile || dragStartX === null) return;
+
+      const x = event.active.rect.current.translated?.left ?? 0;
+      const diff = x - dragStartX;
+
+      // Require less movement on mobile for day change
+      if (Math.abs(diff) > 20) {
+        if (diff < 0) {
+          // Dragging left
+          setViewDate((prev) => addDays(prev, 1));
+        } else {
+          // Dragging right
+          setViewDate((prev) => subDays(prev, 1));
+        }
+        setDragStartX(x); // Reset reference point
+      }
+    },
+    [isMobile, dragStartX]
+  );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
     setActiveId(null);
     setActiveEvent(null);
+    setDragStartX(null);
+    setLastMoveX(null);
+    document.body.style.cursor = "";
 
     if (over && active.id !== over.id) {
-      const overDate = new Date(over.id as string);
-      onEventMove(active.id as string, overDate);
+      onEventMove(active.id as string, new Date(over.id));
     }
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setActiveEvent(null);
+    setDragStartX(null);
+    setLastMoveX(null);
+    document.body.style.cursor = "";
   };
 
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
       <div className="flex-1 bg-white overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-7 h-[calc(100vh-4rem)] divide-y md:divide-y-0 md:divide-x divide-gray-200">
-          {days.map((day, index) => (
-            <DroppableDay
+          {days.map((day) => (
+            <div
               key={day.date.toString()}
-              day={day}
               className={`relative flex flex-col ${
                 day.isToday ? "bg-blue-50" : ""
               }`}
@@ -176,65 +229,71 @@ export default function CalendarGrid({
               </div>
 
               {/* Events Container */}
-              <div className="flex-1 p-4 relative">
-                <SortableContext
-                  items={getEventsForDay(day.date).map((e) => e.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="space-y-2">
-                    {getEventsForDay(day.date).map((event) => (
-                      <EventCard
-                        key={event.id}
-                        event={event}
-                        onEdit={onEditEvent}
-                        onDelete={onDeleteEvent}
-                        onOpenDetail={onOpenDetail}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
-
-                {getEventsForDay(day.date).length === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <p className="text-sm text-gray-400">No events scheduled</p>
-                  </div>
-                )}
-
-                {/* Add Event Button */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => onAddEvent(day.date)}
-                  className="absolute bottom-4 right-4 rounded-full bg-indigo-600 p-2 text-white shadow-lg hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 z-10"
-                >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+              <DroppableDay date={day.date}>
+                <div className="p-4 relative h-full">
+                  <SortableContext
+                    items={getEventsForDay(day.date).map((e) => e.id)}
+                    strategy={verticalListSortingStrategy}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                </motion.button>
-              </div>
-            </DroppableDay>
+                    <div className="space-y-2">
+                      {getEventsForDay(day.date).map((event) => (
+                        <EventCard
+                          key={event.id}
+                          event={event}
+                          onEdit={onEditEvent}
+                          onDelete={onDeleteEvent}
+                          onOpenDetail={onOpenDetail}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+
+                  {getEventsForDay(day.date).length === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <p className="text-sm text-gray-400">
+                        No events scheduled
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Add Event Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => onAddEvent(day.date)}
+                    className="absolute bottom-4 right-4 rounded-full bg-indigo-600 p-2 text-white shadow-lg hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 z-10"
+                  >
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                  </motion.button>
+                </div>
+              </DroppableDay>
+            </div>
           ))}
         </div>
       </div>
 
-      <DragOverlay>
+      <DragOverlay dropAnimation={null}>
         {activeId && activeEvent ? (
-          <EventCard
-            event={activeEvent}
-            onEdit={onEditEvent}
-            onDelete={onDeleteEvent}
-            onOpenDetail={onOpenDetail}
-          />
+          <div className="transform scale-105 opacity-90 touch-none">
+            <EventCard
+              event={activeEvent}
+              onEdit={onEditEvent}
+              onDelete={onDeleteEvent}
+              onOpenDetail={onOpenDetail}
+            />
+          </div>
         ) : null}
       </DragOverlay>
     </DndContext>

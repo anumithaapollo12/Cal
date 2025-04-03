@@ -29,14 +29,22 @@ export default function EventCard({
     isDragging,
   } = useSortable({
     id: event.id,
-    data: event,
+    transition: {
+      duration: 150,
+      easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+    },
   });
+
+  const handleClick = (e: React.MouseEvent) => {
+    // Prevent opening detail view when clicking edit or delete buttons
+    if ((e.target as HTMLElement).closest("button")) return;
+    onOpenDetail(event);
+  };
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 50 : 0,
-    opacity: isDragging ? 0.5 : 1,
+    touchAction: "none",
   };
 
   return (
@@ -45,24 +53,23 @@ export default function EventCard({
       style={style}
       {...attributes}
       {...listeners}
-      onClick={(e) => {
-        // Prevent opening detail view when clicking edit or delete buttons
-        if ((e.target as HTMLElement).closest("button")) return;
-        onOpenDetail(event);
-      }}
-      className={`group relative rounded-lg p-3 hover:shadow-md transition-shadow bg-white cursor-grab active:cursor-grabbing ${
-        isDragging ? "shadow-lg" : ""
-      }`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
+      onClick={handleClick}
+      className={`group relative rounded-lg p-3 bg-white select-none touch-none
+        ${
+          isDragging
+            ? "shadow-lg opacity-50 z-50"
+            : "hover:shadow-md opacity-100"
+        }
+        transition-all cursor-grab active:cursor-grabbing`}
+      initial={false}
+      animate={{ opacity: isDragging ? 0.5 : 1 }}
       layoutId={`event-${event.id}`}
     >
       <div className="flex items-start justify-between">
-        <div>
+        <div className="min-w-0 flex-1">
           <motion.h3
             layoutId={`title-${event.id}`}
-            className="font-medium text-gray-900"
+            className="font-medium text-gray-900 truncate"
           >
             {event.title}
           </motion.h3>
@@ -76,22 +83,22 @@ export default function EventCard({
           {event.description && (
             <motion.p
               layoutId={`desc-${event.id}`}
-              className="mt-1 text-sm text-gray-600"
+              className="mt-1 text-sm text-gray-600 line-clamp-2"
             >
               {event.description}
             </motion.p>
           )}
         </div>
-        <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
           <button
             onClick={() => onEdit(event)}
-            className="text-gray-400 hover:text-gray-500"
+            className="text-gray-400 hover:text-gray-500 touch-none"
           >
             <PencilIcon className="h-4 w-4" />
           </button>
           <button
             onClick={() => onDelete(event.id)}
-            className="text-gray-400 hover:text-red-500"
+            className="text-gray-400 hover:text-red-500 touch-none"
           >
             <TrashIcon className="h-4 w-4" />
           </button>
