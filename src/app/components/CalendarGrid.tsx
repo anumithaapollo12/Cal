@@ -57,14 +57,18 @@ function DroppableDay({
   });
 
   return (
-    <div
+    <motion.div
       ref={setNodeRef}
-      className={`flex-1 h-full transition-colors ${
-        isOver ? "bg-blue-50" : ""
-      }`}
+      initial={false}
+      animate={{
+        backgroundColor: isOver ? "rgb(239, 246, 255)" : "transparent",
+        scale: isOver ? 1.02 : 1,
+      }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className="flex-1 h-full"
     >
       {children}
-    </div>
+    </motion.div>
   );
 }
 
@@ -176,9 +180,17 @@ export default function CalendarGrid({
 
       if (Math.abs(diff) > 35 && now - lastUpdateTime > 150) {
         if (diff < 0) {
-          setViewDate((prev) => subDays(prev, 1));
+          setViewDate((prev) => {
+            const newDate = subDays(prev, 1);
+            // Animate the calendar when switching days
+            return newDate;
+          });
         } else {
-          setViewDate((prev) => addDays(prev, 1));
+          setViewDate((prev) => {
+            const newDate = addDays(prev, 1);
+            // Animate the calendar when switching days
+            return newDate;
+          });
         }
         setDragStartX(x);
         setLastUpdateTime(now);
@@ -219,8 +231,17 @@ export default function CalendarGrid({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex-1 overflow-hidden bg-white/60">
-        <div className="grid grid-cols-1 md:grid-cols-7 h-[calc(100vh-4rem)] divide-y md:divide-y-0 md:divide-x divide-gray-100/70">
+      <motion.div
+        className="flex-1 overflow-hidden bg-white/60"
+        initial={false}
+        animate={{ opacity: 1 }}
+      >
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-7 h-[calc(100vh-4rem)] divide-y md:divide-y-0 md:divide-x divide-gray-100/70"
+          initial={false}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
           {days.map((day) => (
             <motion.div
               key={day.date.toString()}
@@ -280,6 +301,7 @@ export default function CalendarGrid({
                   whileHover={{
                     backgroundColor: "rgba(249, 250, 251, 0.8)",
                   }}
+                  transition={{ duration: 0.2 }}
                 >
                   <SortableContext
                     items={getEventsForDay(day.date).map((e) => e.id)}
@@ -290,7 +312,7 @@ export default function CalendarGrid({
                       initial={false}
                       animate={{
                         opacity: 1,
-                        transition: { staggerChildren: 0.1 },
+                        transition: { staggerChildren: 0.05 },
                       }}
                     >
                       {getEventsForDay(day.date).map((event) => (
@@ -300,6 +322,7 @@ export default function CalendarGrid({
                           onEdit={onEditEvent}
                           onDelete={onDeleteEvent}
                           onOpenDetail={onOpenDetail}
+                          isDragging={event.id === activeId}
                         />
                       ))}
                     </motion.div>
@@ -356,25 +379,25 @@ export default function CalendarGrid({
               </DroppableDay>
             </motion.div>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       <DragOverlay dropAnimation={null}>
         {activeId && activeEvent ? (
           <motion.div
-            className="transform touch-none pointer-events-none"
             initial={false}
             animate={{
-              scale: 1.02,
+              scale: 1.05,
               boxShadow:
-                "0 12px 24px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.04)",
-              transition: {
-                type: "spring",
-                stiffness: 400,
-                damping: 30,
-                mass: 0.8,
-              },
+                "0 16px 32px -4px rgba(0, 0, 0, 0.1), 0 8px 16px -4px rgba(0, 0, 0, 0.1)",
+              rotate: 0,
             }}
+            transition={{
+              type: "spring",
+              stiffness: 400,
+              damping: 30,
+            }}
+            className="transform-gpu touch-none"
           >
             <EventCard
               event={activeEvent}

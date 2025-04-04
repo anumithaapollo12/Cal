@@ -28,10 +28,16 @@ export default function EventCard({
   isDragging = false,
 }: EventCardProps) {
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({
-      id: event.id,
-    });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSorting,
+  } = useSortable({
+    id: event.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -66,79 +72,111 @@ export default function EventCard({
       {...listeners}
       onClick={handleCardClick}
       className={`group relative card-premium overflow-hidden cursor-pointer
-        ${
-          isDragging
-            ? "scale-105 shadow-elevated !border-[var(--color-primary)]"
-            : ""
-        }`}
+        ${isDragging ? "z-50" : "z-0"}`}
       initial={false}
+      animate={{
+        scale: isDragging ? 1.05 : 1,
+        boxShadow: isDragging
+          ? "0 16px 32px -4px rgba(0, 0, 0, 0.1), 0 8px 16px -4px rgba(0, 0, 0, 0.1)"
+          : "var(--shadow-card)",
+        y: isDragging ? -4 : 0,
+      }}
       whileHover={{
         scale: isDragging ? 1.05 : 1.02,
         y: -4,
       }}
-      animate={{
-        scale: 1,
-        boxShadow: isDragging ? "var(--shadow-elevated)" : "var(--shadow-card)",
-        transition: { duration: 0.2, ease: "easeOut" },
+      transition={{
+        type: "spring",
+        stiffness: 400,
+        damping: 30,
       }}
     >
       {/* Time Badge */}
-      <div
+      <motion.div
         className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-[var(--color-gray-100)] 
            text-xs font-medium text-[var(--color-gray-500)] tracking-wide
            group-hover:bg-[var(--color-gray-200)] transition-all duration-300"
+        animate={{
+          scale: isDragging ? 1.05 : 1,
+        }}
       >
         {format(new Date(event.startTime), "h:mm a")}
-      </div>
+      </motion.div>
 
       {/* Color Tag */}
-      <div
-        className="absolute top-0 left-0 w-1 h-full transition-all duration-300
-                   group-hover:opacity-90"
+      <motion.div
+        className="absolute top-0 left-0 w-1 h-full"
         style={{ backgroundColor: event.color || "var(--color-primary)" }}
+        animate={{
+          opacity: isDragging ? 1 : 0.9,
+          height: isDragging ? "100%" : "100%",
+        }}
+        transition={{ duration: 0.2 }}
       />
 
       {event.image && (
-        <div className="relative w-full h-48 overflow-hidden">
-          <img
+        <motion.div className="relative w-full h-48 overflow-hidden">
+          <motion.img
             src={event.image}
             alt={event.imageAlt || event.title}
-            className="absolute inset-0 w-full h-full object-cover transition-all duration-500
-                     group-hover:scale-[1.02] group-hover:saturate-[1.05]"
+            className="absolute inset-0 w-full h-full object-cover"
+            animate={{
+              scale: isDragging ? 1.05 : 1,
+            }}
+            whileHover={{
+              scale: isDragging ? 1.05 : 1.02,
+            }}
+            transition={{ duration: 0.3 }}
           />
-          <div
-            className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/0 to-transparent 
-                       transition-opacity duration-300 group-hover:opacity-90"
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/0 to-transparent"
+            animate={{
+              opacity: isDragging ? 0.9 : 0.7,
+            }}
           />
-        </div>
+        </motion.div>
       )}
 
-      <div className="p-5">
+      <motion.div
+        className="p-5"
+        animate={{
+          scale: isDragging ? 1.02 : 1,
+        }}
+      >
         <div className="flex flex-col gap-3">
           <div className="space-y-1.5">
-            <h2
+            <motion.h2
               className="text-base font-semibold text-[var(--color-gray-900)] 
-                         group-hover:text-[var(--color-primary)] transition-colors duration-300"
+                       group-hover:text-[var(--color-primary)] transition-colors duration-300"
+              animate={{
+                scale: isDragging ? 1.02 : 1,
+              }}
             >
               {event.title}
-            </h2>
+            </motion.h2>
             {event.description && (
-              <div
+              <motion.div
                 className="text-sm text-[var(--color-gray-500)] line-clamp-2
-                          group-hover:text-[var(--color-gray-900)] transition-colors duration-300"
+                        group-hover:text-[var(--color-gray-900)] transition-colors duration-300"
+                animate={{
+                  opacity: isDragging ? 0.9 : 1,
+                }}
               >
                 {event.description}
-              </div>
+              </motion.div>
             )}
           </div>
 
           {/* Action Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{
+              opacity: isDragging ? 0 : 1,
+              y: isDragging ? 8 : 0,
+            }}
             className="flex items-center gap-2 pt-1 opacity-0 translate-y-1
-                        group-hover:opacity-100 group-hover:translate-y-0 
-                        transition-all duration-300 ease-out"
+                      group-hover:opacity-100 group-hover:translate-y-0 
+                      transition-all duration-300 ease-out"
           >
             <motion.button
               type="button"
@@ -181,7 +219,7 @@ export default function EventCard({
             </motion.button>
           </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Drag Indicator */}
       <motion.div
@@ -189,6 +227,7 @@ export default function EventCard({
         animate={{
           opacity: isDragging ? 1 : 0,
           height: isDragging ? "2px" : "1px",
+          width: isDragging ? "calc(100% - 2rem)" : "0%",
         }}
         transition={{ duration: 0.2 }}
         className="absolute inset-x-4 bottom-0 bg-[var(--color-primary)]
