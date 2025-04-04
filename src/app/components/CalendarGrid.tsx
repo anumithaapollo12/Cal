@@ -157,16 +157,16 @@ export default function CalendarGrid({
       const diff = x - dragStartX;
       const now = Date.now();
 
-      // Throttle updates to reduce state changes
-      if (Math.abs(diff) > 35 && now - lastUpdateTime > 200) {
-        requestAnimationFrame(() => {
-          if (diff < 0) {
-            setViewDate((prev) => subDays(prev, 1));
-          } else {
-            setViewDate((prev) => addDays(prev, 1));
-          }
-        });
-        setDragStartX(x);
+      // Require more movement on mobile for day change and add time threshold
+      if (Math.abs(diff) > 35 && now - lastUpdateTime > 150) {
+        if (diff < 0) {
+          // Dragging left (go back in time)
+          setViewDate((prev) => subDays(prev, 1));
+        } else {
+          // Dragging right (go forward in time)
+          setViewDate((prev) => addDays(prev, 1));
+        }
+        setDragStartX(x); // Reset reference point
         setLastUpdateTime(now);
       }
     },
@@ -349,13 +349,12 @@ export default function CalendarGrid({
             className="transform scale-105 opacity-90 touch-none"
             initial={false}
             animate={{
-              rotate: 0, // Simplified animation during drag
-              scale: 1.05,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 25,
+              rotate: [-1, 1, -1],
+              transition: {
+                repeat: Infinity,
+                duration: 2,
+                ease: "easeInOut",
+              },
             }}
           >
             <EventCard
@@ -363,7 +362,6 @@ export default function CalendarGrid({
               onEdit={onEditEvent}
               onDelete={onDeleteEvent}
               onOpenDetail={onOpenDetail}
-              isDragging={true}
             />
           </motion.div>
         ) : null}

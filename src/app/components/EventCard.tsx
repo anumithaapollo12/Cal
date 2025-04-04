@@ -16,6 +16,7 @@ interface EventCardProps {
     event: Event,
     position: { top: number; left: number; width: number; height: number }
   ) => void;
+  isDragging?: boolean;
 }
 
 const EventCard = memo(function EventCard({
@@ -23,23 +24,18 @@ const EventCard = memo(function EventCard({
   onEdit,
   onDelete,
   onOpenDetail,
+  isDragging,
 }: EventCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: event.id,
-    transition: {
-      duration: 150,
-      easing: "cubic-bezier(0.4, 0, 0.2, 1)",
-    },
-  });
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id: event.id,
+      transition: {
+        duration: 150,
+        easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
+    });
 
   const style = {
     transform: CSS.Transform.toString(transform),
