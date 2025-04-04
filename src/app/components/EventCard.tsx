@@ -6,7 +6,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { Event } from "../types/Event";
 import { TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
-import { useRef, useCallback, memo } from "react";
+import { useRef, useCallback, memo, useMemo } from "react";
 
 interface EventCardProps {
   event: Event;
@@ -28,25 +28,38 @@ const EventCard = memo(function EventCard({
 }: EventCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({
+  const isInteractive = !isDragging;
+
+  // Memoize sortable configuration
+  const sortableConfig = useMemo(
+    () => ({
       id: event.id,
       transition: {
         duration: 150,
         easing: "cubic-bezier(0.4, 0, 0.2, 1)",
       },
-    });
+    }),
+    [event.id]
+  );
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    touchAction: "none",
-    willChange: "transform",
-  };
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable(sortableConfig);
+
+  // Memoize style object
+  const style = useMemo(
+    () => ({
+      transform: CSS.Transform.toString(transform),
+      transition,
+      touchAction: "none",
+      willChange: "transform",
+    }),
+    [transform, transition]
+  );
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       if ((e.target as HTMLElement).closest("button")) return;
+      if (transform) return; // Don't open if we're dragging
 
       const element = e.currentTarget as HTMLElement;
       const rect = element.getBoundingClientRect();
@@ -57,10 +70,27 @@ const EventCard = memo(function EventCard({
         height: rect.height,
       });
     },
-    [event, onOpenDetail]
+    [event, onOpenDetail, transform]
   );
 
-  const isInteractive = !isDragging;
+  // Memoize animation configurations
+  const animations = useMemo(
+    () => ({
+      hover: isInteractive
+        ? {
+            y: -4,
+            transition: { type: "spring", stiffness: 400, damping: 25 },
+          }
+        : undefined,
+      tap: isInteractive
+        ? {
+            scale: 0.98,
+            transition: { type: "spring", stiffness: 400, damping: 25 },
+          }
+        : undefined,
+    }),
+    [isInteractive]
+  );
 
   return (
     <motion.div
@@ -72,30 +102,25 @@ const EventCard = memo(function EventCard({
       className={`group relative rounded-2xl select-none touch-none
         ${
           isDragging
-            ? "shadow-lg opacity-50 z-50"
-            : "shadow-sm hover:shadow-xl opacity-100"
+            ? "shadow-lg bg-white/95 backdrop-blur-sm z-50"
+            : "shadow-sm hover:shadow-xl bg-white"
         }
-        transition-all duration-300 ease-out cursor-pointer
-        border border-gray-100 overflow-hidden bg-white`}
+        transition-all duration-200 ease-out cursor-pointer
+        border border-gray-100 overflow-hidden`}
       initial={false}
-      animate={{ opacity: isDragging ? 0.5 : 1 }}
+      animate={{
+        opacity: isDragging ? 0.85 : 1,
+        scale: isDragging ? 1.02 : 1,
+        transition: {
+          type: "spring",
+          stiffness: 400,
+          damping: 30,
+          mass: 0.8,
+        },
+      }}
       layoutId={`event-${event.id}`}
-      whileHover={
-        isInteractive
-          ? {
-              y: -4,
-              transition: { type: "spring", stiffness: 400, damping: 25 },
-            }
-          : undefined
-      }
-      whileTap={
-        isInteractive
-          ? {
-              scale: 0.98,
-              transition: { type: "spring", stiffness: 400, damping: 25 },
-            }
-          : undefined
-      }
+      whileHover={animations.hover}
+      whileTap={animations.tap}
     >
       {/* Event Image */}
       {event.image && !isDragging && (

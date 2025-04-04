@@ -92,15 +92,16 @@ export default function CalendarGrid({
 
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
-      distance: 4,
+      distance: 10,
+      delay: 150,
     },
   });
 
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
-      delay: 250,
-      tolerance: 0,
-      distance: 0,
+      delay: 200,
+      tolerance: 5,
+      distance: 10,
     },
   });
 
@@ -124,15 +125,25 @@ export default function CalendarGrid({
     [startDate, isMobile]
   );
 
-  // Memoize events per day
-  const getEventsForDay = useMemo(
-    () => (date: Date) => {
-      return events.filter((event) => {
+  // Pre-compute events per day for better performance
+  const eventsPerDay = useMemo(() => {
+    const eventMap = new Map<string, Event[]>();
+
+    days.forEach(({ date }) => {
+      const dayEvents = events.filter((event) => {
         const eventStart = new Date(event.startTime);
         return isSameDay(date, eventStart);
       });
-    },
-    [events]
+      eventMap.set(date.toISOString(), dayEvents);
+    });
+
+    return eventMap;
+  }, [days, events]);
+
+  // Efficient lookup function
+  const getEventsForDay = useCallback(
+    (date: Date) => eventsPerDay.get(date.toISOString()) || [],
+    [eventsPerDay]
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -346,14 +357,17 @@ export default function CalendarGrid({
       <DragOverlay dropAnimation={null}>
         {activeId && activeEvent ? (
           <motion.div
-            className="transform scale-105 opacity-90 touch-none"
+            className="transform touch-none pointer-events-none"
             initial={false}
             animate={{
-              rotate: [-1, 1, -1],
+              scale: 1.02,
+              boxShadow:
+                "0 8px 24px -4px rgba(0, 0, 0, 0.1), 0 2px 8px -2px rgba(0, 0, 0, 0.05)",
               transition: {
-                repeat: Infinity,
-                duration: 2,
-                ease: "easeInOut",
+                type: "spring",
+                stiffness: 400,
+                damping: 30,
+                mass: 0.8,
               },
             }}
           >
@@ -362,6 +376,7 @@ export default function CalendarGrid({
               onEdit={onEditEvent}
               onDelete={onDeleteEvent}
               onOpenDetail={onOpenDetail}
+              isDragging={true}
             />
           </motion.div>
         ) : null}
