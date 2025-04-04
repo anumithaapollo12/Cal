@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Event } from "../types/Event";
 import { format, addHours, isBefore, parseISO } from "date-fns";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarIcon,
   ClockIcon,
   SwatchIcon,
   PhotoIcon,
   XMarkIcon,
+  ArrowUpTrayIcon,
+  ClipboardIcon,
 } from "@heroicons/react/24/outline";
 
 interface EventFormProps {
@@ -42,6 +44,7 @@ export default function EventForm({
   );
   const [image, setImage] = useState(initialEvent?.image || "");
   const [imageAlt, setImageAlt] = useState(initialEvent?.imageAlt || "");
+  const [isDragging, setIsDragging] = useState(false);
 
   // Split date and time into separate states
   const [startDate, setStartDate] = useState(
@@ -90,6 +93,79 @@ export default function EventForm({
   useEffect(() => {
     setEndDate(startDate);
   }, [startDate]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setImage(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setImage(event.target.result as string);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+    []
+  );
+
+  const handlePaste = useCallback((e: ClipboardEvent) => {
+    e.preventDefault();
+    const items = e.clipboardData?.items;
+
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            if (event.target?.result) {
+              setImage(event.target.result as string);
+            }
+          };
+          reader.readAsDataURL(file);
+          break;
+        }
+      }
+    }
+  }, []);
+
+  // Add paste event listener
+  useEffect(() => {
+    document.addEventListener("paste", handlePaste);
+    return () => {
+      document.removeEventListener("paste", handlePaste);
+    };
+  }, [handlePaste]);
 
   return (
     <motion.form
@@ -151,18 +227,64 @@ export default function EventForm({
               </div>
             </div>
           ) : (
-            <div className="relative">
-              <input
-                type="url"
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                className="block w-full pr-12 rounded-lg border border-gray-200 
-                  focus:border-indigo-500 focus:ring-0 transition-colors p-3
-                  placeholder:text-gray-400"
-                placeholder="Paste image URL"
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <PhotoIcon className="w-5 h-5 text-gray-400" />
+            <div className="space-y-4">
+              {/* URL Input */}
+              <div className="relative">
+                <input
+                  type="url"
+                  value={image}
+                  onChange={(e) => setImage(e.target.value)}
+                  className="block w-full pr-12 rounded-lg border border-gray-200 
+                    focus:border-indigo-500 focus:ring-0 transition-colors p-3
+                    placeholder:text-gray-400"
+                  placeholder="Paste image URL"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <PhotoIcon className="w-5 h-5 text-gray-400" />
+                </div>
+              </div>
+
+              {/* Drag & Drop Zone */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`relative border-2 border-dashed rounded-lg p-8
+                  transition-colors text-center cursor-pointer
+                  ${
+                    isDragging
+                      ? "border-indigo-500 bg-indigo-50"
+                      : "border-gray-300 hover:border-gray-400"
+                  }`}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <div className="space-y-2">
+                  <div className="flex flex-col items-center gap-1">
+                    <ArrowUpTrayIcon className="w-8 h-8 text-gray-400" />
+                    <ClipboardIcon className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium text-indigo-600">
+                      Click to upload
+                    </span>{" "}
+                    or drag and drop
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    PNG, JPG up to 10MB
+                    <br />
+                    <span className="text-indigo-600">
+                      {navigator?.platform?.toLowerCase().includes("mac")
+                        ? "⌘+V"
+                        : "Ctrl+V"}{" "}
+                      to paste
+                    </span>
+                  </p>
+                </div>
               </div>
             </div>
           )}
