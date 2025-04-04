@@ -103,10 +103,10 @@ const EventCard = memo(function EventCard({
         ${
           isDragging
             ? "shadow-lg bg-white/95 backdrop-blur-sm z-50"
-            : "shadow-sm hover:shadow-xl bg-white"
+            : "shadow-sm hover:shadow-md bg-white"
         }
         transition-all duration-200 ease-out cursor-pointer
-        border border-gray-100 overflow-hidden`}
+        border border-gray-100/80 overflow-hidden`}
       initial={false}
       animate={{
         opacity: isDragging ? 0.85 : 1,
@@ -136,7 +136,7 @@ const EventCard = memo(function EventCard({
           />
           <motion.div
             layoutId={`image-overlay-${event.id}`}
-            className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"
+            className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"
           />
           {/* Action Buttons */}
           <motion.div
@@ -148,8 +148,8 @@ const EventCard = memo(function EventCard({
           >
             <motion.button
               onClick={() => onEdit(event)}
-              className="p-2 rounded-full bg-white/90 hover:bg-white text-gray-700 hover:text-gray-900
-                shadow-sm backdrop-blur-sm transition-colors"
+              className="p-2 rounded-xl bg-white/90 hover:bg-white text-gray-700 hover:text-gray-900
+                shadow-sm backdrop-blur-sm transition-all duration-200"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -157,8 +157,8 @@ const EventCard = memo(function EventCard({
             </motion.button>
             <motion.button
               onClick={() => onDelete(event.id)}
-              className="p-2 rounded-full bg-white/90 hover:bg-white text-gray-700 hover:text-red-600
-                shadow-sm backdrop-blur-sm transition-colors"
+              className="p-2 rounded-xl bg-white/90 hover:bg-white text-gray-700 hover:text-red-600
+                shadow-sm backdrop-blur-sm transition-all duration-200"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -172,7 +172,7 @@ const EventCard = memo(function EventCard({
       <motion.div
         className={`relative p-4 ${event.image ? "" : "pt-3"}`}
         style={{
-          borderLeft: `4px solid ${event.color}`,
+          borderLeft: `3px solid ${event.color}`,
         }}
       >
         {/* Title and Actions Row */}
@@ -180,7 +180,7 @@ const EventCard = memo(function EventCard({
           <motion.div className="flex-1 min-w-0">
             <motion.h3
               layoutId={`title-${event.id}`}
-              className="font-medium text-base text-gray-900 leading-tight"
+              className="font-medium text-base text-gray-900 leading-tight tracking-[-0.01em]"
             >
               {event.title}
             </motion.h3>
@@ -195,7 +195,7 @@ const EventCard = memo(function EventCard({
               <motion.button
                 onClick={() => onEdit(event)}
                 className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600
-                  hover:bg-gray-50 transition-colors"
+                  hover:bg-gray-50 transition-all duration-200"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -204,7 +204,7 @@ const EventCard = memo(function EventCard({
               <motion.button
                 onClick={() => onDelete(event.id)}
                 className="p-1.5 rounded-lg text-gray-400 hover:text-red-600
-                  hover:bg-red-50 transition-colors"
+                  hover:bg-red-50 transition-all duration-200"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >

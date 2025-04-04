@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   title: "Kanban Calendar",
@@ -16,9 +19,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full bg-gray-50">
-      <body className={`${inter.className} h-full`}>
-        <div className="min-h-full">{children}</div>
+    <html lang="en" className="h-full">
+      <body
+        className={`${inter.variable} font-sans h-full bg-[#fafafa] bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]`}
+      >
+        <div className="min-h-full relative backdrop-blur-[2px]">
+          {children}
+        </div>
       </body>
     </html>
   );

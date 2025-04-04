@@ -39,16 +39,17 @@ export default function CalendarHeader({
   };
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    <header className="bg-white/80 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between items-center">
           {/* Navigation Controls */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handlePrevious}
-              className="rounded-full p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="rounded-xl p-2.5 text-gray-500 hover:text-gray-900 hover:bg-gray-50 
+                focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200"
               aria-label={isMobile ? "Previous day" : "Previous week"}
             >
               <ChevronLeftIcon className="h-5 w-5" />
@@ -57,7 +58,8 @@ export default function CalendarHeader({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleNext}
-              className="rounded-full p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="rounded-xl p-2.5 text-gray-500 hover:text-gray-900 hover:bg-gray-50
+                focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200"
               aria-label={isMobile ? "Next day" : "Next week"}
             >
               <ChevronRightIcon className="h-5 w-5" />
@@ -66,7 +68,7 @@ export default function CalendarHeader({
 
           {/* Date Range Display */}
           <motion.h1
-            className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 truncate"
+            className="text-lg sm:text-xl font-medium text-gray-900 tracking-[-0.01em]"
             layout
           >
             {isMobile ? (
@@ -74,27 +76,30 @@ export default function CalendarHeader({
             ) : (
               <>
                 <span className="hidden sm:inline">
-                  {format(weekStart, "MMMM d")} -{" "}
+                  {format(weekStart, "MMMM d")}
+                  <span className="mx-2 text-gray-300">—</span>
                   {format(weekEnd, "MMMM d, yyyy")}
                 </span>
                 <span className="sm:hidden">
-                  {format(weekStart, "MMM d")} - {format(weekEnd, "MMM d")}
+                  {format(weekStart, "MMM d")}
+                  <span className="mx-1.5 text-gray-300">—</span>
+                  {format(weekEnd, "MMM d")}
                 </span>
               </>
             )}
           </motion.h1>
 
           {/* Today Button */}
-          <div className="flex items-center">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleToday}
-              className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              Today
-            </motion.button>
-          </div>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleToday}
+            className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm 
+              hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2
+              transition-all duration-200"
+          >
+            Today
+          </motion.button>
         </div>
       </div>
     </header>

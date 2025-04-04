@@ -92,8 +92,9 @@ export default function CalendarGrid({
 
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
-      distance: 10,
-      delay: 150,
+      distance: 8,
+      delay: 0,
+      tolerance: 0,
     },
   });
 
@@ -101,7 +102,7 @@ export default function CalendarGrid({
     activationConstraint: {
       delay: 200,
       tolerance: 5,
-      distance: 10,
+      distance: 0,
     },
   });
 
@@ -147,12 +148,15 @@ export default function CalendarGrid({
   );
 
   const handleDragStart = (event: DragStartEvent) => {
+    if (!event.active) return;
+
     const draggedEvent = events.find((e) => e.id === event.active.id);
     if (draggedEvent) {
       setActiveId(event.active.id as string);
       setActiveEvent(draggedEvent);
-      if (isMobile) {
-        const x = event.active.rect.current.translated?.left ?? 0;
+      if (isMobile && event.active.rect.current) {
+        const rect = event.active.rect.current;
+        const x = rect.translated?.left ?? rect.initial?.left ?? 0;
         setDragStartX(x);
         setLastUpdateTime(Date.now());
       }
@@ -162,22 +166,21 @@ export default function CalendarGrid({
 
   const handleDragMove = useCallback(
     (event: DragMoveEvent) => {
-      if (!isMobile || dragStartX === null) return;
+      if (!isMobile || dragStartX === null || !event.active.rect.current)
+        return;
 
-      const x = event.active.rect.current.translated?.left ?? 0;
+      const rect = event.active.rect.current;
+      const x = rect.translated?.left ?? rect.initial?.left ?? 0;
       const diff = x - dragStartX;
       const now = Date.now();
 
-      // Require more movement on mobile for day change and add time threshold
       if (Math.abs(diff) > 35 && now - lastUpdateTime > 150) {
         if (diff < 0) {
-          // Dragging left (go back in time)
           setViewDate((prev) => subDays(prev, 1));
         } else {
-          // Dragging right (go forward in time)
           setViewDate((prev) => addDays(prev, 1));
         }
-        setDragStartX(x); // Reset reference point
+        setDragStartX(x);
         setLastUpdateTime(now);
       }
     },
@@ -216,22 +219,22 @@ export default function CalendarGrid({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex-1 bg-gradient-to-br from-white to-gray-50 overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-7 h-[calc(100vh-4rem)] divide-y md:divide-y-0 md:divide-x divide-gray-200/50">
+      <div className="flex-1 overflow-hidden bg-white/60">
+        <div className="grid grid-cols-1 md:grid-cols-7 h-[calc(100vh-4rem)] divide-y md:divide-y-0 md:divide-x divide-gray-100/70">
           {days.map((day) => (
             <motion.div
               key={day.date.toString()}
               initial={false}
               animate={{
                 backgroundColor: day.isToday
-                  ? "rgb(239, 246, 255)"
+                  ? "rgb(249, 250, 251)"
                   : "transparent",
               }}
               className="relative flex flex-col group"
             >
               {/* Modern Day Header */}
               <motion.div
-                className="sticky top-0 backdrop-blur-sm bg-white/80 border-b border-gray-200/50 z-20"
+                className="sticky top-0 backdrop-blur-sm bg-white/90 border-b border-gray-100/70 z-20"
                 initial={false}
                 whileHover={{
                   backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -242,7 +245,7 @@ export default function CalendarGrid({
                     className="flex flex-col items-center md:items-start"
                     whileHover={{ scale: 1.02 }}
                   >
-                    <span className="text-sm font-medium text-gray-600">
+                    <span className="text-sm font-medium text-gray-700">
                       {day.dayName}
                     </span>
                     <span className="text-xs text-gray-400 md:hidden">
@@ -253,16 +256,16 @@ export default function CalendarGrid({
                     className={`flex items-center justify-center w-10 h-10 rounded-xl
                       ${
                         day.isToday
-                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-                          : "text-gray-900 bg-white/50 shadow-sm"
+                          ? "bg-gray-900 text-white shadow-lg shadow-gray-200/50"
+                          : "text-gray-900 bg-gray-50/80"
                       }`}
                     whileHover={{
                       scale: 1.05,
-                      boxShadow: "0 8px 20px -4px rgba(76, 29, 149, 0.2)",
+                      boxShadow: "0 8px 20px -4px rgba(0, 0, 0, 0.1)",
                     }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <span className="text-xl font-semibold">
+                    <span className="text-xl font-medium tracking-tight">
                       {day.dayNumber}
                     </span>
                   </motion.div>
@@ -309,8 +312,8 @@ export default function CalendarGrid({
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2 }}
                     >
-                      <p className="text-sm text-gray-400/80 italic">
-                        No events yet
+                      <p className="text-sm text-gray-400/70 font-medium">
+                        No events
                       </p>
                     </motion.div>
                   )}
@@ -319,11 +322,13 @@ export default function CalendarGrid({
                   <motion.button
                     whileHover={{
                       scale: 1.05,
-                      boxShadow: "0 8px 20px -4px rgba(79, 70, 229, 0.3)",
+                      boxShadow: "0 8px 20px -4px rgba(0, 0, 0, 0.1)",
                     }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => onAddEvent(day.date)}
-                    className="absolute bottom-4 right-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 p-2.5 text-white shadow-lg hover:from-indigo-500 hover:to-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 z-10"
+                    className="absolute bottom-4 right-4 rounded-xl bg-gray-900 p-2.5 text-white 
+                      shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 
+                      focus:ring-gray-900 focus:ring-offset-2 z-10 transition-all duration-200"
                   >
                     <motion.svg
                       className="h-5 w-5"
@@ -342,7 +347,7 @@ export default function CalendarGrid({
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth={2.5}
+                        strokeWidth={2}
                         d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                       />
                     </motion.svg>
@@ -362,7 +367,7 @@ export default function CalendarGrid({
             animate={{
               scale: 1.02,
               boxShadow:
-                "0 8px 24px -4px rgba(0, 0, 0, 0.1), 0 2px 8px -2px rgba(0, 0, 0, 0.05)",
+                "0 12px 24px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.04)",
               transition: {
                 type: "spring",
                 stiffness: 400,
