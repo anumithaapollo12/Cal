@@ -6,7 +6,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { Event } from "../types/Event";
 import { TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
-import { useRef, useCallback, memo, useMemo } from "react";
+import { useRef } from "react";
+import Image from "next/image";
 
 interface EventCardProps {
   event: Event;
@@ -14,247 +15,127 @@ interface EventCardProps {
   onDelete: (eventId: string) => void;
   onOpenDetail: (
     event: Event,
-    position: { top: number; left: number; width: number; height: number }
+    position?: { top: number; left: number; width: number; height: number }
   ) => void;
   isDragging?: boolean;
 }
 
-const EventCard = memo(function EventCard({
+export default function EventCard({
   event,
   onEdit,
   onDelete,
   onOpenDetail,
-  isDragging,
+  isDragging = false,
 }: EventCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  const isInteractive = !isDragging;
-
-  // Memoize sortable configuration
-  const sortableConfig = useMemo(
-    () => ({
-      id: event.id,
-      transition: {
-        duration: 150,
-        easing: "cubic-bezier(0.4, 0, 0.2, 1)",
-      },
-    }),
-    [event.id]
-  );
-
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable(sortableConfig);
+    useSortable({
+      id: event.id,
+    });
 
-  // Memoize style object
-  const style = useMemo(
-    () => ({
-      transform: CSS.Transform.toString(transform),
-      transition,
-      touchAction: "none",
-      willChange: "transform",
-    }),
-    [transform, transition]
-  );
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      if ((e.target as HTMLElement).closest("button")) return;
-      if (transform) return; // Don't open if we're dragging
+  function handleCardClick(e: React.MouseEvent) {
+    const target = e.target as HTMLElement;
+    if (target.closest(".edit-button") || target.closest(".delete-button")) {
+      return;
+    }
 
-      const element = e.currentTarget as HTMLElement;
-      const rect = element.getBoundingClientRect();
+    const rect = cardRef.current?.getBoundingClientRect();
+    if (rect) {
       onOpenDetail(event, {
         top: rect.top,
         left: rect.left,
         width: rect.width,
         height: rect.height,
       });
-    },
-    [event, onOpenDetail, transform]
-  );
-
-  // Memoize animation configurations
-  const animations = useMemo(
-    () => ({
-      hover: isInteractive
-        ? {
-            y: -4,
-            transition: { type: "spring", stiffness: 400, damping: 25 },
-          }
-        : undefined,
-      tap: isInteractive
-        ? {
-            scale: 0.98,
-            transition: { type: "spring", stiffness: 400, damping: 25 },
-          }
-        : undefined,
-    }),
-    [isInteractive]
-  );
+    }
+  }
 
   return (
     <motion.div
-      ref={setNodeRef}
+      ref={(node) => {
+        cardRef.current = node;
+        setNodeRef(node);
+      }}
       style={style}
       {...attributes}
       {...listeners}
-      onClick={handleClick}
-      className={`group relative rounded-2xl select-none touch-none
-        ${
-          isDragging
-            ? "shadow-lg bg-white/95 backdrop-blur-sm z-50"
-            : "shadow-sm hover:shadow-md bg-white"
-        }
-        transition-all duration-200 ease-out cursor-pointer
-        border border-gray-100/80 overflow-hidden`}
-      initial={false}
-      animate={{
-        opacity: isDragging ? 0.85 : 1,
-        scale: isDragging ? 1.02 : 1,
-        transition: {
-          type: "spring",
-          stiffness: 400,
-          damping: 30,
-          mass: 0.8,
-        },
-      }}
+      onClick={handleCardClick}
+      className={`group relative rounded-2xl bg-white border border-black/[0.04] 
+        ${isDragging ? "shadow-lg" : "shadow-sm hover:shadow-md"}`}
       layoutId={`event-${event.id}`}
-      whileHover={animations.hover}
-      whileTap={animations.tap}
     >
-      {/* Event Image */}
-      {event.image && !isDragging && (
-        <motion.div
-          layoutId={`image-container-${event.id}`}
-          className="relative aspect-[16/9] w-full overflow-hidden"
-        >
-          <motion.img
-            layoutId={`image-${event.id}`}
+      {event.image && (
+        <div className="relative w-full h-32 overflow-hidden">
+          <Image
             src={event.image}
             alt={event.imageAlt || event.title}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          <motion.div
-            layoutId={`image-overlay-${event.id}`}
-            className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"
-          />
-          {/* Action Buttons */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute top-3 right-3 flex gap-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <motion.button
-              onClick={() => onEdit(event)}
-              className="p-2 rounded-xl bg-white/90 hover:bg-white text-gray-700 hover:text-gray-900
-                shadow-sm backdrop-blur-sm transition-all duration-200"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <PencilIcon className="h-4 w-4" />
-            </motion.button>
-            <motion.button
-              onClick={() => onDelete(event.id)}
-              className="p-2 rounded-xl bg-white/90 hover:bg-white text-gray-700 hover:text-red-600
-                shadow-sm backdrop-blur-sm transition-all duration-200"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <TrashIcon className="h-4 w-4" />
-            </motion.button>
-          </motion.div>
-        </motion.div>
+        </div>
       )}
 
-      {/* Content Container */}
-      <motion.div
-        className={`relative p-4 ${event.image ? "" : "pt-3"}`}
-        style={{
-          borderLeft: `3px solid ${event.color}`,
-        }}
-      >
-        {/* Title and Actions Row */}
-        <div className="flex items-start justify-between mb-2">
-          <motion.div className="flex-1 min-w-0">
-            <motion.h3
-              layoutId={`title-${event.id}`}
-              className="font-medium text-base text-gray-900 leading-tight tracking-[-0.01em]"
-            >
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-medium text-[#222222] truncate">
               {event.title}
-            </motion.h3>
-          </motion.div>
+            </h3>
+            <p className="mt-1 text-sm text-[#717171]">
+              {format(new Date(event.startTime), "h:mm a")}
+            </p>
+          </div>
 
-          {/* Action Buttons (when no image) */}
-          {!isDragging && !event.image && (
-            <motion.div
-              className="flex gap-1.5 ml-3"
-              onClick={(e) => e.stopPropagation()}
+          <div className="flex items-center gap-2 z-10">
+            <button
+              type="button"
+              className="edit-button p-2 rounded-lg bg-gray-50 hover:bg-gray-100"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onEdit(event);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
             >
-              <motion.button
-                onClick={() => onEdit(event)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600
-                  hover:bg-gray-50 transition-all duration-200"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <PencilIcon className="h-3.5 w-3.5" />
-              </motion.button>
-              <motion.button
-                onClick={() => onDelete(event.id)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-red-600
-                  hover:bg-red-50 transition-all duration-200"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <TrashIcon className="h-3.5 w-3.5" />
-              </motion.button>
-            </motion.div>
-          )}
+              <PencilIcon className="w-4 h-4 text-gray-600" />
+            </button>
+            <button
+              type="button"
+              className="delete-button p-2 rounded-lg bg-red-50 hover:bg-red-100"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelete(event.id);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+            >
+              <TrashIcon className="w-4 h-4 text-red-600" />
+            </button>
+          </div>
         </div>
 
-        {/* Time Display */}
-        <motion.div
-          layoutId={`time-${event.id}`}
-          className="flex items-center text-sm text-gray-500 mb-2"
-        >
-          <div className="flex items-center gap-1.5">
-            <svg
-              className="h-4 w-4 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="font-medium text-gray-600">
-              {format(new Date(event.startTime), "h:mm a")}
-            </span>
-            <span className="text-gray-400 mx-0.5">→</span>
-            <span className="font-medium text-gray-600">
-              {format(new Date(event.endTime), "h:mm a")}
-            </span>
-          </div>
-        </motion.div>
-
-        {/* Description */}
-        {!isDragging && event.description && (
-          <motion.div
-            layoutId={`desc-${event.id}`}
-            className="text-sm text-gray-500 line-clamp-2 leading-relaxed"
-          >
+        {event.description && (
+          <p className="mt-2 text-sm text-[#717171] line-clamp-2">
             {event.description}
-          </motion.div>
+          </p>
         )}
-      </motion.div>
+      </div>
+
+      {/* Drag Handle */}
+      <div
+        className={`absolute inset-x-0 top-0 h-1 bg-[#FF385C] origin-left transition-all duration-300
+          ${isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+      />
     </motion.div>
   );
-});
-
-export default EventCard;
+}
