@@ -71,65 +71,71 @@ export default function EventCard({
             ? "scale-105 shadow-elevated !border-[var(--color-primary)]"
             : ""
         }`}
-      layoutId={`event-${event.id}`}
-      whileHover={{ scale: 1.01 }}
       initial={false}
+      whileHover={{
+        scale: isDragging ? 1.05 : 1.02,
+        y: -4,
+      }}
       animate={{
+        scale: 1,
         boxShadow: isDragging ? "var(--shadow-elevated)" : "var(--shadow-card)",
-        transition: { duration: 0.3, ease: "easeInOut" },
+        transition: { duration: 0.2, ease: "easeOut" },
       }}
     >
-      {/* Time Indicator */}
+      {/* Time Badge */}
       <div
         className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-[var(--color-gray-100)] 
            text-xs font-medium text-[var(--color-gray-500)] tracking-wide
-           group-hover:bg-[var(--color-gray-200)] transition-colors"
+           group-hover:bg-[var(--color-gray-200)] transition-all duration-300"
       >
         {format(new Date(event.startTime), "h:mm a")}
       </div>
 
       {/* Color Tag */}
       <div
-        className="absolute top-0 left-4 w-8 h-1 rounded-b-full transition-all duration-300
-                   group-hover:w-12 group-hover:opacity-90"
+        className="absolute top-0 left-0 w-1 h-full transition-all duration-300
+                   group-hover:opacity-90"
         style={{ backgroundColor: event.color || "var(--color-primary)" }}
       />
 
       {event.image && (
         <div className="relative w-full h-48 overflow-hidden">
-          <Image
+          <img
             src={event.image}
             alt={event.imageAlt || event.title}
-            fill
-            className="object-cover transition-all duration-700 ease-out
-                     group-hover:scale-[1.03] group-hover:saturate-[1.1]"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="absolute inset-0 w-full h-full object-cover transition-all duration-500
+                     group-hover:scale-[1.02] group-hover:saturate-[1.05]"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/20" />
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/0 to-transparent 
+                       transition-opacity duration-300 group-hover:opacity-90"
+          />
         </div>
       )}
 
       <div className="p-5">
         <div className="flex flex-col gap-3">
           <div className="space-y-1.5">
-            <h3
+            <h2
               className="text-base font-semibold text-[var(--color-gray-900)] 
-                         group-hover:text-[var(--color-primary)] transition-colors"
+                         group-hover:text-[var(--color-primary)] transition-colors duration-300"
             >
               {event.title}
-            </h3>
+            </h2>
             {event.description && (
-              <p
+              <div
                 className="text-sm text-[var(--color-gray-500)] line-clamp-2
-                          group-hover:text-[var(--color-gray-900)] transition-colors"
+                          group-hover:text-[var(--color-gray-900)] transition-colors duration-300"
               >
                 {event.description}
-              </p>
+              </div>
             )}
           </div>
 
           {/* Action Buttons */}
-          <div
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-2 pt-1 opacity-0 translate-y-1
                         group-hover:opacity-100 group-hover:translate-y-0 
                         transition-all duration-300 ease-out"
@@ -140,7 +146,7 @@ export default function EventCard({
               whileTap={{ scale: 0.95 }}
               className="edit-button p-2 rounded-xl bg-[var(--color-gray-100)]
                        hover:bg-[var(--color-gray-200)] active:bg-[var(--color-gray-300)]
-                       transition-colors"
+                       transition-all duration-300"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -152,7 +158,7 @@ export default function EventCard({
             >
               <PencilIcon
                 className="w-4 h-4 text-[var(--color-gray-500)]
-                                   group-hover:text-[var(--color-primary)]"
+                                   group-hover:text-[var(--color-primary)] transition-colors duration-300"
               />
             </motion.button>
             <motion.button
@@ -161,7 +167,7 @@ export default function EventCard({
               whileTap={{ scale: 0.95 }}
               className="delete-button p-2 rounded-xl bg-red-50
                        hover:bg-red-100 active:bg-red-200
-                       transition-colors"
+                       transition-all duration-300"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -173,7 +179,7 @@ export default function EventCard({
             >
               <TrashIcon className="w-4 h-4 text-[var(--color-error)]" />
             </motion.button>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -184,6 +190,7 @@ export default function EventCard({
           opacity: isDragging ? 1 : 0,
           height: isDragging ? "2px" : "1px",
         }}
+        transition={{ duration: 0.2 }}
         className="absolute inset-x-4 bottom-0 bg-[var(--color-primary)]
                  rounded-full origin-left"
         style={{
