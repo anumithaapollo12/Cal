@@ -65,37 +65,82 @@ export default function EventCard({
       {...attributes}
       {...listeners}
       onClick={handleCardClick}
-      className={`group relative rounded-2xl bg-white border border-black/[0.04] 
-        ${isDragging ? "shadow-lg" : "shadow-sm hover:shadow-md"}`}
+      className={`group relative card-premium overflow-hidden cursor-pointer
+        ${
+          isDragging
+            ? "scale-105 shadow-elevated !border-[var(--color-primary)]"
+            : ""
+        }`}
       layoutId={`event-${event.id}`}
+      whileHover={{ scale: 1.01 }}
+      initial={false}
+      animate={{
+        boxShadow: isDragging ? "var(--shadow-elevated)" : "var(--shadow-card)",
+        transition: { duration: 0.3, ease: "easeInOut" },
+      }}
     >
+      {/* Time Indicator */}
+      <div
+        className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-[var(--color-gray-100)] 
+           text-xs font-medium text-[var(--color-gray-500)] tracking-wide
+           group-hover:bg-[var(--color-gray-200)] transition-colors"
+      >
+        {format(new Date(event.startTime), "h:mm a")}
+      </div>
+
+      {/* Color Tag */}
+      <div
+        className="absolute top-0 left-4 w-8 h-1 rounded-b-full transition-all duration-300
+                   group-hover:w-12 group-hover:opacity-90"
+        style={{ backgroundColor: event.color || "var(--color-primary)" }}
+      />
+
       {event.image && (
-        <div className="relative w-full h-32 overflow-hidden">
+        <div className="relative w-full h-48 overflow-hidden">
           <Image
             src={event.image}
             alt={event.imageAlt || event.title}
             fill
-            className="object-cover"
+            className="object-cover transition-all duration-700 ease-out
+                     group-hover:scale-[1.03] group-hover:saturate-[1.1]"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/20" />
         </div>
       )}
 
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <h3 className="text-base font-medium text-[#222222] truncate">
+      <div className="p-5">
+        <div className="flex flex-col gap-3">
+          <div className="space-y-1.5">
+            <h3
+              className="text-base font-semibold text-[var(--color-gray-900)] 
+                         group-hover:text-[var(--color-primary)] transition-colors"
+            >
               {event.title}
             </h3>
-            <p className="mt-1 text-sm text-[#717171]">
-              {format(new Date(event.startTime), "h:mm a")}
-            </p>
+            {event.description && (
+              <p
+                className="text-sm text-[var(--color-gray-500)] line-clamp-2
+                          group-hover:text-[var(--color-gray-900)] transition-colors"
+              >
+                {event.description}
+              </p>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 z-10">
-            <button
+          {/* Action Buttons */}
+          <div
+            className="flex items-center gap-2 pt-1 opacity-0 translate-y-1
+                        group-hover:opacity-100 group-hover:translate-y-0 
+                        transition-all duration-300 ease-out"
+          >
+            <motion.button
               type="button"
-              className="edit-button p-2 rounded-lg bg-gray-50 hover:bg-gray-100"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="edit-button p-2 rounded-xl bg-[var(--color-gray-100)]
+                       hover:bg-[var(--color-gray-200)] active:bg-[var(--color-gray-300)]
+                       transition-colors"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -105,11 +150,18 @@ export default function EventCard({
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
             >
-              <PencilIcon className="w-4 h-4 text-gray-600" />
-            </button>
-            <button
+              <PencilIcon
+                className="w-4 h-4 text-[var(--color-gray-500)]
+                                   group-hover:text-[var(--color-primary)]"
+              />
+            </motion.button>
+            <motion.button
               type="button"
-              className="delete-button p-2 rounded-lg bg-red-50 hover:bg-red-100"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="delete-button p-2 rounded-xl bg-red-50
+                       hover:bg-red-100 active:bg-red-200
+                       transition-colors"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -119,22 +171,24 @@ export default function EventCard({
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
             >
-              <TrashIcon className="w-4 h-4 text-red-600" />
-            </button>
+              <TrashIcon className="w-4 h-4 text-[var(--color-error)]" />
+            </motion.button>
           </div>
         </div>
-
-        {event.description && (
-          <p className="mt-2 text-sm text-[#717171] line-clamp-2">
-            {event.description}
-          </p>
-        )}
       </div>
 
-      {/* Drag Handle */}
-      <div
-        className={`absolute inset-x-0 top-0 h-1 bg-[#FF385C] origin-left transition-all duration-300
-          ${isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+      {/* Drag Indicator */}
+      <motion.div
+        initial={false}
+        animate={{
+          opacity: isDragging ? 1 : 0,
+          height: isDragging ? "2px" : "1px",
+        }}
+        className="absolute inset-x-4 bottom-0 bg-[var(--color-primary)]
+                 rounded-full origin-left"
+        style={{
+          boxShadow: "0 0 8px var(--color-primary)",
+        }}
       />
     </motion.div>
   );

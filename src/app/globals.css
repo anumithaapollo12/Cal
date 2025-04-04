@@ -2,39 +2,184 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom scrollbar styles */
+/* Apple Design System 2024 */
+:root {
+  /* Core Colors - inspired by macOS Sonoma */
+  --color-primary: #007aff; /* SF Symbol Blue */
+  --color-primary-light: #47a2ff; /* For hover states */
+  --color-primary-dark: #0051aa; /* For active states */
+
+  /* Neutral Palette - Apple's refined grays */
+  --color-gray-50: #fbfbfd; /* Background alt */
+  --color-gray-100: #f5f5f7; /* Background main */
+  --color-gray-200: #e8e8ed; /* Subtle borders */
+  --color-gray-300: #d2d2d7; /* Stronger borders */
+  --color-gray-400: #86868b; /* Subtle text */
+  --color-gray-500: #6e6e73; /* Secondary text */
+  --color-gray-900: #1d1d1f; /* Primary text */
+
+  /* Semantic Colors */
+  --color-success: #00b06c; /* More professional green */
+  --color-warning: #ff9500; /* iOS warning */
+  --color-error: #ff3b30; /* iOS error */
+
+  /* Special Effects */
+  --blur-sm: blur(8px) saturate(180%);
+  --blur-md: blur(12px) saturate(180%);
+  --blur-lg: blur(16px) saturate(180%);
+
+  /* Refined Shadows - inspired by macOS */
+  --shadow-subtle: 0px 1px 2px rgba(0, 0, 0, 0.04),
+    0px 2px 4px rgba(0, 0, 0, 0.02);
+  --shadow-card: 0px 2px 4px rgba(0, 0, 0, 0.02),
+    0px 4px 8px rgba(0, 0, 0, 0.02), 0px 8px 16px rgba(0, 0, 0, 0.02);
+  --shadow-elevated: 0px 4px 8px rgba(0, 0, 0, 0.04),
+    0px 8px 16px rgba(0, 0, 0, 0.04), 0px 16px 32px rgba(0, 0, 0, 0.04);
+
+  /* Animation Curves - matching Apple's fluid motion */
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Refined Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 3px;
+  background: var(--color-gray-300);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 8px;
+  min-height: 36px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--color-gray-400);
+  border: 2px solid transparent;
 }
 
-/* Smooth transitions */
+/* Fluid Animations */
 * {
-  transition: all 200ms ease-in-out;
+  transition: transform 0.4s var(--ease-bounce), opacity 0.3s var(--ease-out),
+    background-color 0.2s var(--ease-out), border-color 0.2s var(--ease-out),
+    box-shadow 0.3s var(--ease-out), color 0.2s var(--ease-out);
 }
 
-/* Premium touch */
-.shadow-premium {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+@layer base {
+  html {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-[var(--color-gray-100)];
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03", "cv04";
+    letter-spacing: -0.011em;
+  }
 }
 
 @layer components {
+  /* Calendar Day - Refined */
   .calendar-day {
-    @apply hover:bg-gray-50;
+    @apply relative overflow-hidden rounded-2xl bg-white/90
+           transition-all duration-500;
+    backdrop-filter: var(--blur-sm);
+  }
+
+  .calendar-day:hover {
+    @apply bg-white;
+    backdrop-filter: var(--blur-md);
+    box-shadow: var(--shadow-subtle);
+    transform: translateY(-1px);
+  }
+
+  .calendar-day:active {
+    transform: translateY(0px);
+  }
+
+  /* Modern Card Design */
+  .card-premium {
+    @apply bg-white/95 rounded-2xl
+           border border-[var(--color-gray-200)]
+           transition-all duration-500;
+    backdrop-filter: var(--blur-sm);
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-premium:hover {
+    @apply bg-white border-[var(--color-gray-300)];
+    backdrop-filter: var(--blur-md);
+    box-shadow: var(--shadow-elevated);
+    transform: translateY(-2px) scale(1.01);
+  }
+
+  .card-premium:active {
+    transform: translateY(0px) scale(0.99);
+  }
+
+  /* Button Styles - Refined */
+  .btn-primary {
+    @apply bg-[var(--color-primary)] text-white rounded-xl px-6 py-3
+           font-medium tracking-[-0.01em]
+           transition-all duration-300;
+    box-shadow: var(--shadow-subtle);
+  }
+
+  .btn-primary:hover {
+    @apply bg-[var(--color-primary-light)];
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-card);
+  }
+
+  .btn-primary:active {
+    @apply bg-[var(--color-primary-dark)];
+    transform: translateY(1px);
+  }
+
+  .btn-secondary {
+    @apply bg-white/80 text-[var(--color-gray-900)] rounded-xl px-6 py-3
+           border border-[var(--color-gray-200)]
+           font-medium tracking-[-0.01em]
+           transition-all duration-300;
+    backdrop-filter: var(--blur-sm);
+  }
+
+  .btn-secondary:hover {
+    @apply bg-white border-[var(--color-gray-300)];
+    backdrop-filter: var(--blur-md);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-subtle);
+  }
+
+  .btn-secondary:active {
+    @apply bg-[var(--color-gray-100)];
+    transform: translateY(1px);
+  }
+
+  /* Input Field - Refined */
+  .input-premium {
+    @apply bg-white/90 rounded-xl border border-[var(--color-gray-200)]
+           px-4 py-3 text-[var(--color-gray-900)]
+           placeholder-[var(--color-gray-400)]
+           transition-all duration-300;
+    backdrop-filter: var(--blur-sm);
+  }
+
+  .input-premium:hover {
+    @apply border-[var(--color-gray-300)];
+    backdrop-filter: var(--blur-md);
+  }
+
+  .input-premium:focus {
+    @apply border-[var(--color-primary)] ring-1 ring-[var(--color-primary)];
+    backdrop-filter: var(--blur-md);
   }
 }
