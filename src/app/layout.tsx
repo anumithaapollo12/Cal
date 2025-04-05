@@ -1,16 +1,12 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
+import { Inter } from "next/font/google";
+import YearProgressBar from "./components/YearProgressBar";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
+const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "Kanban Calendar",
-  description:
-    "A premium calendar experience with Kanban-style event management",
+export const metadata = {
+  title: "Calendar App",
+  description: "A modern calendar application",
 };
 
 export default function RootLayout({
@@ -20,11 +16,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
-      <body
-        className={`${inter.variable} font-sans h-full bg-[#fafafa] bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]`}
-      >
-        <div className="min-h-full relative backdrop-blur-[2px]">
-          {children}
+      <body className={`${inter.className} h-full`}>
+        <div className="flex flex-col min-h-full">
+          <main className="flex-1 bg-gray-50/50">{children}</main>
+          <div className="h-12"> {/* Spacer for progress bar */}</div>
+          <YearProgressBar />
         </div>
       </body>
     </html>
