@@ -237,7 +237,7 @@ export default function CalendarGrid({
         animate={{ opacity: 1 }}
       >
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-7 h-[calc(100vh-8rem)] divide-y md:divide-y-0 md:divide-x divide-gray-100/70"
+          className="grid grid-cols-1 md:grid-cols-7 h-[calc(100vh-10rem)] divide-y md:divide-y-0 md:divide-x divide-gray-100/70"
           initial={false}
           animate={{ x: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}

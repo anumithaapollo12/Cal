@@ -53,14 +53,14 @@ export default function YearProgressBar({
   return (
     <motion.div
       className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200
-                 flex items-center justify-center z-[60] h-14"
+                 flex items-center justify-center z-[60] h-20 py-5"
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="w-full px-6 py-3 relative">
+      <div className="w-full px-8 relative">
         {/* Progress Info Overlay */}
-        <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center space-x-4">
+        <div className="absolute left-8 top-1/2 -translate-y-1/2 flex items-center space-x-4">
           <span className="text-base font-semibold text-gray-900">
             {startYear}
           </span>
@@ -68,7 +68,7 @@ export default function YearProgressBar({
 
         {/* Progress Bar Container */}
         <div
-          className="relative mx-24"
+          className="relative mx-32"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -128,7 +128,7 @@ export default function YearProgressBar({
         </div>
 
         {/* Year End */}
-        <div className="absolute right-6 top-1/2 -translate-y-1/2">
+        <div className="absolute right-8 top-1/2 -translate-y-1/2">
           <span className="text-base font-medium text-gray-400">{endYear}</span>
         </div>
       </div>
