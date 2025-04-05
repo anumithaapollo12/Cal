@@ -164,11 +164,11 @@ export default function Home() {
 
       <EventDetail
         event={selectedEvent}
+        isOpen={!!selectedEvent}
         onClose={() => {
           setSelectedEvent(null);
           setCardPosition(undefined);
         }}
-        cardPosition={cardPosition}
       />
     </main>
   );

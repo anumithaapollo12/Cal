@@ -45,20 +45,15 @@ export default function EventCard({
   };
 
   function handleCardClick(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+
     const target = e.target as HTMLElement;
     if (target.closest(".edit-button") || target.closest(".delete-button")) {
       return;
     }
 
-    const rect = cardRef.current?.getBoundingClientRect();
-    if (rect) {
-      onOpenDetail(event, {
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-      });
-    }
+    onOpenDetail(event);
   }
 
   return (
@@ -72,7 +67,7 @@ export default function EventCard({
       {...listeners}
       onClick={handleCardClick}
       className={`group relative card-premium overflow-hidden cursor-pointer
-        ${isDragging ? "z-50" : "z-0"}`}
+        ${isDragging ? "z-50" : ""}`}
       initial={false}
       animate={{
         scale: isDragging ? 1.05 : 1,
