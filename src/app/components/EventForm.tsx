@@ -100,6 +100,8 @@ export default function EventForm({
         endTime: new Date(`${endDate}T${endTime}`),
         color,
         type: eventType.toLowerCase() as "event" | "task" | "appointment",
+        image,
+        imageAlt,
       });
     }
   };
@@ -214,10 +216,6 @@ export default function EventForm({
       onSubmit={handleSubmit}
       className="space-y-6"
     >
-      <h1 className="text-2xl font-semibold text-gray-900">
-        Add title and time
-      </h1>
-
       {/* Event Type Tabs */}
       <div className="flex gap-2">
         {(["Event", "Task", "Appointment"] as const).map((type) => (
