@@ -2,7 +2,7 @@
 
 import { motion, useSpring, useTransform } from "framer-motion";
 import { useEffect, useState } from "react";
-import { differenceInDays, format } from "date-fns";
+import { getQuarter, getMonth, getDaysInMonth, getDate } from "date-fns";
 
 interface YearProgressBarProps {
   startYear?: number;
@@ -14,43 +14,36 @@ export default function YearProgressBar({
   endYear = startYear + 1,
 }: YearProgressBarProps) {
   const [progress, setProgress] = useState(0);
-  const [daysLeft, setDaysLeft] = useState(0);
+  const [currentQuarter, setCurrentQuarter] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const calculateProgress = () => {
       const now = new Date();
-      const start = new Date(startYear, 0, 1); // January 1st of start year
-      const end = new Date(startYear, 11, 31, 23, 59, 59, 999); // December 31st of start year
-      const total = end.getTime() - start.getTime();
-      const current = now.getTime() - start.getTime();
-      const percentage = (current / total) * 100;
+      const month = getMonth(now); // 0-11
+      const quarter = getQuarter(now);
+      const dayOfMonth = getDate(now);
+      const daysInMonth = getDaysInMonth(now);
 
-      // Calculate days left in the year
-      const daysRemaining = differenceInDays(end, now);
-      setDaysLeft(daysRemaining);
+      // Calculate progress including the day of the month
+      const monthProgress = month + dayOfMonth / daysInMonth;
+      const yearProgress = (monthProgress / 12) * 100;
 
-      return Math.max(0, Math.min(100, percentage));
+      setCurrentQuarter(quarter);
+      return Math.max(0, Math.min(100, yearProgress));
     };
 
-    // Initial calculation
     setProgress(calculateProgress());
-
-    // Update progress every minute
-    const interval = setInterval(() => {
-      setProgress(calculateProgress());
-    }, 60000);
-
+    const interval = setInterval(calculateProgress, 60000);
     return () => clearInterval(interval);
   }, [startYear]);
 
-  // Smooth animation for progress
   const smoothProgress = useSpring(progress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001,
   });
 
-  // Transform progress to a gradient position
   const gradientProgress = useTransform(
     smoothProgress,
     [0, 100],
@@ -59,49 +52,77 @@ export default function YearProgressBar({
 
   return (
     <motion.div
-      className="fixed bottom-0 left-0 right-0 h-10 bg-white border-t border-gray-200
-                 flex items-center justify-center z-[60]"
+      className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200
+                 flex items-center justify-center z-[60] h-14"
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="flex items-center gap-4 max-w-2xl w-full px-4">
-        <span className="text-sm font-medium text-gray-900">{startYear}</span>
+      <div className="w-full px-6 py-3 relative">
+        {/* Progress Info Overlay */}
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center space-x-4">
+          <span className="text-base font-semibold text-gray-900">
+            {startYear}
+          </span>
+          <span className="font-medium text-gray-900 text-base">
+            Q{currentQuarter}
+          </span>
+        </div>
 
         {/* Progress Bar Container */}
-        <div className="flex-1 relative">
-          {/* Background Bar */}
-          <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-            <motion.div
-              className="absolute inset-y-0 left-0 bg-gray-900 rounded-full"
-              style={{ width: gradientProgress }}
-            />
-          </div>
-
-          {/* Month Markers */}
-          <div className="absolute inset-x-0 top-2 flex justify-between">
-            {Array.from({ length: 12 }, (_, i) => (
-              <div
+        <div
+          className="relative mx-24"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {/* Quarter Labels */}
+          <div className="flex justify-between mb-2">
+            {["Q1", "Q2", "Q3", "Q4"].map((quarter, i) => (
+              <motion.div
                 key={i}
-                className={`w-px h-1 ${
-                  (progress / 100) * 12 > i ? "bg-gray-400" : "bg-gray-200"
-                }`}
-              />
+                className={`text-sm font-medium transition-colors
+                  ${
+                    currentQuarter === i + 1 ? "text-gray-900" : "text-gray-400"
+                  }`}
+                animate={{
+                  opacity: isHovered || currentQuarter === i + 1 ? 1 : 0.7,
+                }}
+              >
+                {quarter}
+              </motion.div>
             ))}
           </div>
 
-          {/* Days Left Indicator */}
+          {/* Main Progress Bar */}
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden relative">
+            {/* Quarter dividers */}
+            <div className="absolute inset-y-0 left-1/4 w-px bg-gray-300" />
+            <div className="absolute inset-y-0 left-2/4 w-px bg-gray-300" />
+            <div className="absolute inset-y-0 left-3/4 w-px bg-gray-300" />
+
+            {/* Progress fill */}
+            <div
+              className="h-full bg-gray-900"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          {/* Progress Indicator */}
           <motion.div
-            className="absolute -top-5 -translate-x-1/2 whitespace-nowrap"
-            style={{ left: gradientProgress }}
+            className="absolute top-[18px] -translate-x-1/2"
+            style={{ left: `${progress}%` }}
+            animate={{
+              scale: isHovered ? 1.2 : 1,
+            }}
           >
-            <span className="text-[10px] font-medium text-gray-500">
-              {daysLeft} days left
-            </span>
+            <div className="w-3 h-3 rounded-full bg-white border-2 border-gray-900 shadow-sm" />
           </motion.div>
         </div>
 
-        <span className="text-sm font-medium text-gray-400">{endYear}</span>
+        {/* Year End */}
+        <div className="absolute right-6 top-1/2 -translate-y-1/2">
+          <span className="text-base font-medium text-gray-400">{endYear}</span>
+        </div>
       </div>
     </motion.div>
   );
