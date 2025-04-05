@@ -135,10 +135,17 @@ export default function CalendarGrid({
     const eventMap = new Map<string, Event[]>();
 
     days.forEach(({ date }) => {
-      const dayEvents = events.filter((event) => {
-        const eventStart = new Date(event.startTime);
-        return isSameDay(date, eventStart);
-      });
+      const dayEvents = events
+        .filter((event) => {
+          const eventStart = new Date(event.startTime);
+          return isSameDay(date, eventStart);
+        })
+        .sort((a, b) => {
+          const aTime = new Date(a.startTime).getTime();
+          const bTime = new Date(b.startTime).getTime();
+          return aTime - bTime;
+        });
+
       eventMap.set(date.toISOString(), dayEvents);
     });
 
