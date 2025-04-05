@@ -64,9 +64,6 @@ export default function YearProgressBar({
           <span className="text-base font-semibold text-gray-900">
             {startYear}
           </span>
-          <span className="font-medium text-gray-900 text-base">
-            Q{currentQuarter}
-          </span>
         </div>
 
         {/* Progress Bar Container */}
@@ -94,29 +91,40 @@ export default function YearProgressBar({
           </div>
 
           {/* Main Progress Bar */}
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden relative">
-            {/* Quarter dividers */}
-            <div className="absolute inset-y-0 left-1/4 w-px bg-gray-300" />
-            <div className="absolute inset-y-0 left-2/4 w-px bg-gray-300" />
-            <div className="absolute inset-y-0 left-3/4 w-px bg-gray-300" />
+          <div className="h-4 bg-gray-100 rounded-full overflow-hidden relative">
+            {/* Quarter sections background */}
+            <div className="absolute inset-y-0 left-0 w-1/4 bg-gray-50" />
+            <div className="absolute inset-y-0 left-1/4 w-1/4 bg-gray-100" />
+            <div className="absolute inset-y-0 left-2/4 w-1/4 bg-gray-50" />
+            <div className="absolute inset-y-0 left-3/4 w-1/4 bg-gray-100" />
 
             {/* Progress fill */}
             <div
-              className="h-full bg-gray-900"
+              className="h-full bg-gray-900 relative z-10"
               style={{ width: `${progress}%` }}
             />
-          </div>
 
-          {/* Progress Indicator */}
-          <motion.div
-            className="absolute top-[18px] -translate-x-1/2"
-            style={{ left: `${progress}%` }}
-            animate={{
-              scale: isHovered ? 1.2 : 1,
-            }}
-          >
-            <div className="w-3 h-3 rounded-full bg-white border-2 border-gray-900 shadow-sm" />
-          </motion.div>
+            {/* Quarter dividers */}
+            <div className="absolute inset-0 flex justify-between pointer-events-none">
+              <div className="h-full w-[3px] bg-gray-400" />
+              <div
+                className={`h-full w-[3px] ${
+                  progress >= 25 ? "bg-white" : "bg-gray-400"
+                }`}
+              />
+              <div
+                className={`h-full w-[3px] ${
+                  progress >= 50 ? "bg-white" : "bg-gray-400"
+                }`}
+              />
+              <div
+                className={`h-full w-[3px] ${
+                  progress >= 75 ? "bg-white" : "bg-gray-400"
+                }`}
+              />
+              <div className="h-full w-[3px] bg-gray-400" />
+            </div>
+          </div>
         </div>
 
         {/* Year End */}
