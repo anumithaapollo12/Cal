@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Event } from "../types/Event";
 import { format, addHours, isBefore, parseISO } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +12,7 @@ import {
   XMarkIcon,
   ArrowUpTrayIcon,
   ClipboardIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 
 interface EventFormProps {
@@ -32,12 +33,29 @@ const PRESET_COLORS = [
   "#F97316", // Orange
 ];
 
+const COMMON_TIMEZONES = [
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+  "America/Phoenix",
+  "Europe/London",
+  "Europe/Paris",
+  "Asia/Tokyo",
+  "Asia/Shanghai",
+  "Australia/Sydney",
+  "Pacific/Auckland",
+];
+
+type EventType = "Event" | "Task" | "Appointment";
+
 export default function EventForm({
   initialEvent,
   selectedDate = new Date(),
   onSubmit,
   onCancel,
 }: EventFormProps) {
+  const [eventType, setEventType] = useState<EventType>("Event");
   const [title, setTitle] = useState(initialEvent?.title || "");
   const [description, setDescription] = useState(
     initialEvent?.description || ""
@@ -62,6 +80,16 @@ export default function EventForm({
 
   const [color, setColor] = useState(initialEvent?.color || "#3B82F6");
 
+  const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false);
+  const [timezone, setTimezone] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
+
+  // Create refs for the date and time inputs
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const startTimeInputRef = useRef<HTMLInputElement>(null);
+  const endTimeInputRef = useRef<HTMLInputElement>(null);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim()) {
@@ -71,8 +99,7 @@ export default function EventForm({
         startTime: new Date(`${startDate}T${startTime}`),
         endTime: new Date(`${endDate}T${endTime}`),
         color,
-        image: image || undefined,
-        imageAlt: imageAlt || undefined,
+        type: eventType.toLowerCase() as "event" | "task" | "appointment",
       });
     }
   };
@@ -93,6 +120,18 @@ export default function EventForm({
   useEffect(() => {
     setEndDate(startDate);
   }, [startDate]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(".timezone-dropdown")) {
+        setShowTimezoneDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -173,19 +212,140 @@ export default function EventForm({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       onSubmit={handleSubmit}
-      className="space-y-8"
+      className="space-y-6"
     >
+      <h1 className="text-2xl font-semibold text-gray-900">
+        Add title and time
+      </h1>
+
+      {/* Event Type Tabs */}
+      <div className="flex gap-2">
+        {(["Event", "Task", "Appointment"] as const).map((type) => (
+          <button
+            key={type}
+            type="button"
+            onClick={() => setEventType(type)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+              ${
+                eventType === type
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-100"
+              }
+              ${type === "Appointment" ? "flex items-center gap-2" : ""}`}
+          >
+            {type}
+            {type === "Appointment" && (
+              <span className="px-1.5 py-0.5 text-xs bg-blue-600 text-white rounded">
+                New
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
       {/* Title Input */}
       <div>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="block w-full border-0 border-b-2 border-gray-200 
-            focus:border-indigo-500 focus:ring-0 text-lg font-medium
-            placeholder:text-gray-400 transition-colors pb-2"
+          className="block w-full border-0 text-lg text-gray-500
+            focus:ring-0 placeholder:text-gray-400"
           placeholder="Event title"
           required
+        />
+      </div>
+
+      {/* Date and Time Selection */}
+      <div className="flex gap-2">
+        <div className="flex-1">
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="w-full bg-gray-100 px-4 py-2 rounded-lg text-gray-900 font-medium
+              hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+          />
+        </div>
+        <div className="w-28">
+          <input
+            type="time"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            className="w-full bg-gray-100 px-4 py-2 rounded-lg text-gray-900 font-medium
+              hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+          />
+        </div>
+        <span className="flex items-center text-gray-500">-</span>
+        <div className="w-28">
+          <input
+            type="time"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+            className="w-full bg-gray-100 px-4 py-2 rounded-lg text-gray-900 font-medium
+              hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+          />
+        </div>
+      </div>
+
+      {/* Color Selection */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Event Color
+        </label>
+        <div className="flex items-center gap-3">
+          {PRESET_COLORS.map((presetColor) => (
+            <motion.button
+              key={presetColor}
+              type="button"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setColor(presetColor)}
+              className={`w-8 h-8 rounded-full transition-all duration-200
+                ${
+                  color === presetColor
+                    ? "ring-2 ring-offset-2 ring-blue-500"
+                    : ""
+                }
+                hover:shadow-lg focus:outline-none`}
+              style={{ backgroundColor: presetColor }}
+              aria-label={`Select color ${presetColor}`}
+            />
+          ))}
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="relative"
+          >
+            <input
+              type="color"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="sr-only"
+              id="custom-color"
+            />
+            <label
+              htmlFor="custom-color"
+              className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 
+                flex items-center justify-center cursor-pointer hover:border-gray-400
+                transition-colors hover:shadow-lg"
+            >
+              <SwatchIcon className="h-4 w-4 text-gray-400" />
+            </label>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Description Input */}
+      <div>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+          className="block w-full border border-gray-200 rounded-lg px-4 py-3
+            focus:border-blue-500 focus:ring-0 text-gray-600
+            placeholder:text-gray-400 resize-none transition-colors"
+          placeholder="Add description (optional)"
         />
       </div>
 
@@ -228,22 +388,6 @@ export default function EventForm({
             </div>
           ) : (
             <div className="space-y-4">
-              {/* URL Input */}
-              <div className="relative">
-                <input
-                  type="url"
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                  className="block w-full pr-12 rounded-lg border border-gray-200 
-                    focus:border-indigo-500 focus:ring-0 transition-colors p-3
-                    placeholder:text-gray-400"
-                  placeholder="Paste image URL"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <PhotoIcon className="w-5 h-5 text-gray-400" />
-                </div>
-              </div>
-
               {/* Drag & Drop Zone */}
               <div
                 onDragOver={handleDragOver}
@@ -291,138 +435,6 @@ export default function EventForm({
         </div>
       </div>
 
-      {/* Description Input */}
-      <div>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="block w-full border border-gray-200 rounded-lg px-4 py-3
-            focus:border-indigo-500 focus:ring-0 text-gray-600
-            placeholder:text-gray-400 resize-none transition-colors"
-          placeholder="Add description (optional)"
-        />
-      </div>
-
-      {/* Date and Time Grid */}
-      <div className="space-y-6">
-        {/* Start Date/Time */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Start
-          </label>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-4">
-                <CalendarIcon className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="block w-full rounded-lg border border-gray-200 pl-12 pr-4 py-3
-                  focus:border-indigo-500 focus:ring-0 transition-colors"
-                required
-              />
-            </div>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-4">
-                <ClockIcon className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="block w-full rounded-lg border border-gray-200 pl-12 pr-4 py-3
-                  focus:border-indigo-500 focus:ring-0 transition-colors"
-                required
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* End Date/Time */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">End</label>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-4">
-                <CalendarIcon className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="block w-full rounded-lg border border-gray-200 pl-12 pr-4 py-3
-                  focus:border-indigo-500 focus:ring-0 transition-colors"
-                required
-              />
-            </div>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-4">
-                <ClockIcon className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="block w-full rounded-lg border border-gray-200 pl-12 pr-4 py-3
-                  focus:border-indigo-500 focus:ring-0 transition-colors"
-                required
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Color Selection */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Event Color
-        </label>
-        <div className="flex items-center gap-3">
-          {PRESET_COLORS.map((presetColor) => (
-            <motion.button
-              key={presetColor}
-              type="button"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setColor(presetColor)}
-              className={`w-8 h-8 rounded-full transition-all duration-200
-                ${
-                  color === presetColor
-                    ? "ring-2 ring-offset-2 ring-indigo-500"
-                    : ""
-                }
-                hover:shadow-lg focus:outline-none`}
-              style={{ backgroundColor: presetColor }}
-              aria-label={`Select color ${presetColor}`}
-            />
-          ))}
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            className="relative"
-          >
-            <input
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              className="sr-only"
-              id="custom-color"
-            />
-            <label
-              htmlFor="custom-color"
-              className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 
-                flex items-center justify-center cursor-pointer hover:border-gray-400
-                transition-colors hover:shadow-lg"
-            >
-              <SwatchIcon className="h-4 w-4 text-gray-400" />
-            </label>
-          </motion.div>
-        </div>
-      </div>
-
       {/* Action Buttons */}
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-4">
         <motion.button
@@ -440,8 +452,8 @@ export default function EventForm({
           whileTap={{ scale: 0.98 }}
           type="submit"
           className="px-6 py-2.5 text-sm font-medium text-white 
-            bg-indigo-600 rounded-lg shadow-sm hover:bg-indigo-700 
-            focus:outline-none focus:ring-2 focus:ring-indigo-500 
+            bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 
+            focus:outline-none focus:ring-2 focus:ring-blue-500 
             focus:ring-offset-2 transition-colors"
         >
           {initialEvent ? "Update Event" : "Create Event"}
