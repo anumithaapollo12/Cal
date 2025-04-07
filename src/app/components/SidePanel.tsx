@@ -22,6 +22,7 @@ import {
   GiftIcon,
   StarIcon,
 } from "@heroicons/react/24/outline";
+import EventDetail from "./EventDetail";
 
 interface SidePanelProps {
   isOpen: boolean;
@@ -112,6 +113,8 @@ export default function SidePanel({ isOpen, onClose }: SidePanelProps) {
     repeatsAnnually: true,
     icon: "cake",
   });
+
+  const [selectedEvent, setSelectedEvent] = useState<LifeEvent | null>(null);
 
   // Save notes to localStorage when they change
   useEffect(() => {
@@ -305,9 +308,10 @@ export default function SidePanel({ isOpen, onClose }: SidePanelProps) {
             {getUpcomingEvents().map((event) => (
               <div
                 key={event.id}
+                onClick={(e) => handleEventClick(event, e)}
                 className={`p-4 rounded-lg ${
                   event.color || "bg-gray-50"
-                } relative group`}
+                } relative group cursor-pointer hover:shadow-md transition-shadow`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
@@ -344,12 +348,6 @@ export default function SidePanel({ isOpen, onClose }: SidePanelProps) {
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => deleteLifeEvent(event.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded-full transition-opacity"
-                  >
-                    <XMarkIcon className="w-4 h-4 text-gray-500" />
-                  </button>
                 </div>
               </div>
             ))}
@@ -512,6 +510,11 @@ export default function SidePanel({ isOpen, onClose }: SidePanelProps) {
       </AnimatePresence>
     </div>
   );
+
+  const handleEventClick = (event: LifeEvent, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event from bubbling up
+    setSelectedEvent(event);
+  };
 
   return (
     <AnimatePresence>
@@ -788,6 +791,16 @@ export default function SidePanel({ isOpen, onClose }: SidePanelProps) {
           </motion.div>
         </>
       )}
+
+      {/* Event Detail Modal - Moved outside the panel AnimatePresence */}
+      <AnimatePresence>
+        {selectedEvent && (
+          <EventDetail
+            event={selectedEvent}
+            onClose={() => setSelectedEvent(null)}
+          />
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 }
