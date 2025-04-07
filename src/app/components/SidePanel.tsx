@@ -2,7 +2,13 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { format, isWeekend, addYears, differenceInDays } from "date-fns";
+import {
+  format,
+  isWeekend,
+  addYears,
+  differenceInDays,
+  isFuture,
+} from "date-fns";
 import {
   CalendarIcon,
   LightBulbIcon,
@@ -12,6 +18,9 @@ import {
   PlusIcon,
   SparklesIcon,
   HeartIcon,
+  CakeIcon,
+  GiftIcon,
+  StarIcon,
 } from "@heroicons/react/24/outline";
 
 interface SidePanelProps {
@@ -47,9 +56,11 @@ interface LifeEvent {
   id: string;
   title: string;
   date: Date;
-  type: "birthday" | "anniversary" | "holiday";
-  note: string;
-  isWeekday: boolean;
+  type: "birthday" | "anniversary" | "holiday" | "special";
+  note?: string;
+  color?: string;
+  icon?: "cake" | "gift" | "heart" | "star";
+  repeatsAnnually?: boolean;
 }
 
 export default function SidePanel({ isOpen, onClose }: SidePanelProps) {
@@ -85,6 +96,23 @@ export default function SidePanel({ isOpen, onClose }: SidePanelProps) {
     useState<Goal["category"]>("personal");
   const [showNewGoalForm, setShowNewGoalForm] = useState(false);
 
+  const [lifeEvents, setLifeEvents] = useState<LifeEvent[]>(() => {
+    const saved = localStorage.getItem("calendar-life-events");
+    return saved
+      ? JSON.parse(saved).map((event: any) => ({
+          ...event,
+          date: new Date(event.date),
+        }))
+      : [];
+  });
+
+  const [showNewEventForm, setShowNewEventForm] = useState(false);
+  const [newEvent, setNewEvent] = useState<Partial<LifeEvent>>({
+    type: "birthday",
+    repeatsAnnually: true,
+    icon: "cake",
+  });
+
   // Save notes to localStorage when they change
   useEffect(() => {
     localStorage.setItem("calendar-notes", JSON.stringify(notes));
@@ -94,6 +122,11 @@ export default function SidePanel({ isOpen, onClose }: SidePanelProps) {
   useEffect(() => {
     localStorage.setItem("calendar-goals", JSON.stringify(goals));
   }, [goals]);
+
+  // Save life events to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem("calendar-life-events", JSON.stringify(lifeEvents));
+  }, [lifeEvents]);
 
   const addNote = () => {
     if (!newNote.trim()) return;
@@ -145,61 +178,340 @@ export default function SidePanel({ isOpen, onClose }: SidePanelProps) {
     setShowNewGoalForm(false);
   };
 
-  // Sample data - in a real app, this would come from state management
-  const upcomingEvents: UpcomingEvent[] = [
-    {
-      id: "1",
-      title: "Your Birthday",
-      date: new Date(2024, 5, 15), // June 15, 2024
-      type: "birthday",
-      isWeekend: false,
-      daysUntil: 45,
-    },
-    {
-      id: "2",
-      title: "Work Anniversary",
-      date: new Date(2024, 7, 1), // August 1, 2024
-      type: "anniversary",
-      isWeekend: false,
-      daysUntil: 92,
-    },
-    {
-      id: "3",
-      title: "Christmas",
-      date: new Date(2024, 11, 25), // December 25, 2024
-      type: "holiday",
-      isWeekend: true,
-      daysUntil: 198,
-    },
-  ];
+  const addLifeEvent = () => {
+    if (!newEvent.title?.trim() || !newEvent.date) return;
 
-  // Enhanced life events with weekday information
-  const lifeEvents: LifeEvent[] = [
-    {
-      id: "1",
-      title: "Mom's Birthday",
-      date: new Date(2024, 5, 15),
+    const eventColors = {
+      birthday: "bg-pink-100",
+      anniversary: "bg-purple-100",
+      holiday: "bg-blue-100",
+      special: "bg-amber-100",
+    };
+
+    const newEventObj: LifeEvent = {
+      id: Math.random().toString(36).substr(2, 9),
+      title: newEvent.title,
+      date: new Date(newEvent.date),
+      type: newEvent.type || "special",
+      note: newEvent.note,
+      color: eventColors[newEvent.type || "special"],
+      icon: newEvent.icon,
+      repeatsAnnually: newEvent.repeatsAnnually,
+    };
+
+    setLifeEvents([...lifeEvents, newEventObj]);
+    setShowNewEventForm(false);
+    setNewEvent({
       type: "birthday",
-      note: "She mentioned wanting to try that new Italian restaurant",
-      isWeekday: !isWeekend(new Date(2024, 5, 15)),
-    },
-    {
-      id: "2",
-      title: "Wedding Anniversary",
-      date: new Date(2024, 7, 1),
-      type: "anniversary",
-      note: "Book something special - last year was magical",
-      isWeekday: !isWeekend(new Date(2024, 7, 1)),
-    },
-    {
-      id: "3",
-      title: "Family Vacation",
-      date: new Date(2024, 11, 25),
-      type: "holiday",
-      note: "Start planning activities everyone will enjoy",
-      isWeekday: !isWeekend(new Date(2024, 11, 25)),
-    },
-  ];
+      repeatsAnnually: true,
+      icon: "cake",
+    });
+  };
+
+  const deleteLifeEvent = (id: string) => {
+    setLifeEvents(lifeEvents.filter((event) => event.id !== id));
+  };
+
+  const getUpcomingEvents = () => {
+    const today = new Date();
+    const nextYear = new Date(
+      today.getFullYear() + 1,
+      today.getMonth(),
+      today.getDate()
+    );
+
+    return lifeEvents
+      .map((event) => {
+        const eventDate = new Date(event.date);
+        if (event.repeatsAnnually) {
+          // Adjust the year to either this year or next year, whichever is closer
+          eventDate.setFullYear(today.getFullYear());
+          if (eventDate < today) {
+            eventDate.setFullYear(today.getFullYear() + 1);
+          }
+        }
+        return {
+          ...event,
+          date: eventDate,
+          daysUntil: differenceInDays(eventDate, today),
+        };
+      })
+      .filter((event) => event.daysUntil >= 0 && event.daysUntil <= 365)
+      .sort((a, b) => a.daysUntil - b.daysUntil);
+  };
+
+  const renderIcon = (icon?: string) => {
+    switch (icon) {
+      case "cake":
+        return <CakeIcon className="w-5 h-5" />;
+      case "gift":
+        return <GiftIcon className="w-5 h-5" />;
+      case "heart":
+        return <HeartIcon className="w-5 h-5" />;
+      case "star":
+        return <StarIcon className="w-5 h-5" />;
+      default:
+        return <CalendarIcon className="w-5 h-5" />;
+    }
+  };
+
+  const renderLifeEventsTab = () => (
+    <div className="flex-1 overflow-y-auto p-6">
+      <div className="space-y-6">
+        {/* Life Snapshot Section */}
+        <div className="bg-blue-50 rounded-xl p-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <HeartIcon className="w-6 h-6 text-blue-600" />
+            <h3 className="text-lg font-semibold text-gray-900">
+              Life Snapshot
+            </h3>
+          </div>
+          <p className="text-gray-600 mb-4">
+            {lifeEvents.length === 0
+              ? "0 upcoming events to plan for. Take a moment to prepare and make them special!"
+              : `${lifeEvents.length} upcoming events to look forward to!`}
+          </p>
+          <button
+            onClick={() => setShowNewEventForm(true)}
+            className="w-full flex items-center justify-center space-x-2 p-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+          >
+            <PlusIcon className="w-5 h-5" />
+            <span>Add Life Event</span>
+          </button>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-4">
+          <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors">
+            <BellIcon className="w-6 h-6 text-blue-600 mb-2" />
+            <span className="text-sm font-medium text-blue-700">
+              Set Reminders
+            </span>
+          </button>
+          <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-green-50 hover:bg-green-100 transition-colors">
+            <CalendarIcon className="w-6 h-6 text-green-600 mb-2" />
+            <span className="text-sm font-medium text-green-700">
+              Plan Free Time
+            </span>
+          </button>
+        </div>
+
+        {/* Upcoming Events List */}
+        {lifeEvents.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-gray-500">
+              Upcoming Events
+            </h3>
+            {getUpcomingEvents().map((event) => (
+              <div
+                key={event.id}
+                className={`p-4 rounded-lg ${
+                  event.color || "bg-gray-50"
+                } relative group`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-white rounded-full">
+                      {renderIcon(event.icon)}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">
+                        {event.title}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {format(event.date, "MMMM d, yyyy")}
+                        {event.daysUntil === 0
+                          ? " (Today!)"
+                          : event.daysUntil === 1
+                          ? " (Tomorrow)"
+                          : ` (in ${event.daysUntil} days)`}
+                      </p>
+                      {event.note && (
+                        <p className="mt-1 text-sm text-gray-600">
+                          {event.note}
+                        </p>
+                      )}
+                      {!isWeekend(event.date) && (
+                        <div className="mt-2 p-2 bg-yellow-50 border border-yellow-100 rounded-lg">
+                          <p className="text-sm text-yellow-800 flex items-center">
+                            <BellIcon className="w-4 h-4 mr-1" />
+                            <span>
+                              Falls on a {format(event.date, "EEEE")} - Consider
+                              planning time off
+                            </span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => deleteLifeEvent(event.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded-full transition-opacity"
+                  >
+                    <XMarkIcon className="w-4 h-4 text-gray-500" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* New Event Form Modal */}
+      <AnimatePresence>
+        {showNewEventForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[70] flex items-center justify-center"
+            onClick={() => setShowNewEventForm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-white rounded-xl shadow-xl p-6 m-4"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Add Life Event
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={newEvent.title || ""}
+                    onChange={(e) =>
+                      setNewEvent({ ...newEvent, title: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., Mom's Birthday"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={
+                      newEvent.date
+                        ? format(new Date(newEvent.date), "yyyy-MM-dd")
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setNewEvent({
+                        ...newEvent,
+                        date: new Date(e.target.value),
+                      })
+                    }
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Type
+                  </label>
+                  <select
+                    value={newEvent.type}
+                    onChange={(e) =>
+                      setNewEvent({
+                        ...newEvent,
+                        type: e.target.value as LifeEvent["type"],
+                      })
+                    }
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="birthday">Birthday</option>
+                    <option value="anniversary">Anniversary</option>
+                    <option value="holiday">Holiday</option>
+                    <option value="special">Special Occasion</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Icon
+                  </label>
+                  <div className="flex space-x-4">
+                    {["cake", "gift", "heart", "star"].map((icon) => (
+                      <button
+                        key={icon}
+                        onClick={() =>
+                          setNewEvent({
+                            ...newEvent,
+                            icon: icon as LifeEvent["icon"],
+                          })
+                        }
+                        className={`p-2 rounded-lg ${
+                          newEvent.icon === icon
+                            ? "bg-blue-50 text-blue-600"
+                            : "hover:bg-gray-50"
+                        }`}
+                      >
+                        {renderIcon(icon)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Note (optional)
+                  </label>
+                  <textarea
+                    value={newEvent.note || ""}
+                    onChange={(e) =>
+                      setNewEvent({ ...newEvent, note: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Add a note or reminder"
+                    rows={3}
+                  />
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="repeatsAnnually"
+                    checked={newEvent.repeatsAnnually}
+                    onChange={(e) =>
+                      setNewEvent({
+                        ...newEvent,
+                        repeatsAnnually: e.target.checked,
+                      })
+                    }
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor="repeatsAnnually"
+                    className="ml-2 text-sm text-gray-600"
+                  >
+                    Repeats annually
+                  </label>
+                </div>
+                <div className="flex justify-end space-x-3 mt-6">
+                  <button
+                    onClick={() => setShowNewEventForm(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={addLifeEvent}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
+                  >
+                    Add Event
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   return (
     <AnimatePresence>
@@ -470,85 +782,7 @@ export default function SidePanel({ isOpen, onClose }: SidePanelProps) {
                   </div>
                 )}
 
-                {activeTab === "upcoming" && (
-                  <div className="space-y-6">
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100">
-                      <div className="flex items-center gap-3 mb-3">
-                        <HeartIcon className="w-5 h-5 text-blue-600" />
-                        <h3 className="text-lg font-medium text-gray-900">
-                          Life Snapshot
-                        </h3>
-                      </div>
-                      <p className="text-sm text-gray-600 leading-relaxed">
-                        {lifeEvents.length} upcoming events to plan for. Take a
-                        moment to prepare and make them special!
-                      </p>
-                    </div>
-
-                    <div className="space-y-4">
-                      {lifeEvents.map((event) => (
-                        <motion.div
-                          key={event.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h4 className="font-medium text-gray-900">
-                                {event.title}
-                              </h4>
-                              <p className="mt-1 text-sm text-gray-500">
-                                {format(event.date, "MMMM d, yyyy")} (
-                                {format(event.date, "EEEE")})
-                              </p>
-                              <p className="mt-2 text-sm text-gray-600 italic">
-                                "{event.note}"
-                              </p>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <span className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                                {differenceInDays(event.date, new Date())} days
-                              </span>
-                              {event.isWeekday && (
-                                <span className="px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-                                  Weekday
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {event.isWeekday && (
-                            <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                              <p className="text-sm text-yellow-800">
-                                This falls on a weekday. Consider planning time
-                                off or notifying your team.
-                              </p>
-                            </div>
-                          )}
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    <div className="mt-6 grid grid-cols-2 gap-4">
-                      <button className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 transition-colors">
-                        <div className="flex flex-col items-center space-y-2">
-                          <BellIcon className="w-6 h-6 text-blue-600" />
-                          <span className="text-sm font-medium text-blue-700">
-                            Set Reminders
-                          </span>
-                        </div>
-                      </button>
-                      <button className="p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 transition-colors">
-                        <div className="flex flex-col items-center space-y-2">
-                          <CalendarIcon className="w-6 h-6 text-green-600" />
-                          <span className="text-sm font-medium text-green-700">
-                            Plan Free Time
-                          </span>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {activeTab === "upcoming" && renderLifeEventsTab()}
               </div>
             </div>
           </motion.div>
