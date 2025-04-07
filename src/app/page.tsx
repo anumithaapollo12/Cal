@@ -7,6 +7,7 @@ import CalendarGrid from "./components/CalendarGrid";
 import Modal from "./components/Modal";
 import EventForm from "./components/EventForm";
 import EventDetail from "./components/EventDetail";
+import SidePanel from "./components/SidePanel";
 import { Event } from "./types/Event";
 
 export default function Home() {
@@ -26,6 +27,7 @@ export default function Home() {
       }
     | undefined
   >(undefined);
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
 
   useEffect(() => {
     // Check if we're on mobile
@@ -127,6 +129,7 @@ export default function Home() {
         currentDate={currentDate}
         onWeekChange={handleWeekChange}
         isMobile={isMobile}
+        onInsightsClick={() => setIsSidePanelOpen(true)}
       />
       <div className="flex-1 overflow-hidden">
         <CalendarGrid
@@ -169,6 +172,11 @@ export default function Home() {
           setSelectedEvent(null);
           setCardPosition(undefined);
         }}
+      />
+
+      <SidePanel
+        isOpen={isSidePanelOpen}
+        onClose={() => setIsSidePanelOpen(false)}
       />
     </main>
   );

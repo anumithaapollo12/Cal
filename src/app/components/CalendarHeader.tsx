@@ -1,6 +1,10 @@
 "use client";
 
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  LightBulbIcon,
+} from "@heroicons/react/24/outline";
 import { format, addDays, addWeeks, startOfWeek, endOfWeek } from "date-fns";
 import { motion } from "framer-motion";
 
@@ -8,12 +12,14 @@ interface CalendarHeaderProps {
   currentDate: Date;
   onWeekChange: (date: Date) => void;
   isMobile?: boolean;
+  onInsightsClick: () => void;
 }
 
 export default function CalendarHeader({
   currentDate,
   onWeekChange,
   isMobile = false,
+  onInsightsClick,
 }: CalendarHeaderProps) {
   const weekStart = startOfWeek(currentDate);
   const weekEnd = endOfWeek(currentDate);
@@ -107,19 +113,32 @@ export default function CalendarHeader({
             </h1>
           </motion.div>
 
-          {/* Today Button */}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleToday}
-            className="relative px-5 py-2 rounded-xl bg-[var(--color-primary)]
-                     text-sm font-medium text-white tracking-[-0.01em]
-                     hover:bg-[var(--color-primary-light)]
-                     active:bg-[var(--color-primary-dark)]
-                     transition-colors"
-          >
-            Today
-          </motion.button>
+          {/* Today Button and Insights */}
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleToday}
+              className="relative px-5 py-2 rounded-xl bg-[var(--color-primary)]
+                       text-sm font-medium text-white tracking-[-0.01em]
+                       hover:bg-[var(--color-primary-light)]
+                       active:bg-[var(--color-primary-dark)]
+                       transition-colors"
+            >
+              Today
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onInsightsClick}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-900 
+                       text-sm font-medium text-white tracking-[-0.01em]
+                       hover:bg-gray-800 active:bg-gray-700 transition-colors"
+            >
+              <LightBulbIcon className="w-4 h-4" />
+              <span>Insights</span>
+            </motion.button>
+          </div>
         </div>
       </div>
     </motion.header>
