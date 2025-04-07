@@ -10,11 +10,13 @@ import EventDetail from "./components/EventDetail";
 import SidePanel from "./components/SidePanel";
 import YearProgressBar from "./components/YearProgressBar";
 import { Event } from "./types/Event";
+import { CalendarNote } from "./components/CalendarNote";
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
+  const [notes, setNotes] = useState<CalendarNote[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -124,6 +126,37 @@ export default function Home() {
     setCardPosition(position);
   };
 
+  const handleUpdateNote = (note: CalendarNote) => {
+    setNotes((prevNotes) => {
+      const existingNoteIndex = prevNotes.findIndex((n) => n.id === note.id);
+      if (existingNoteIndex >= 0) {
+        // Update existing note
+        const updatedNotes = [...prevNotes];
+        updatedNotes[existingNoteIndex] = note;
+        return updatedNotes;
+      } else {
+        // Add new note
+        return [...prevNotes, note];
+      }
+    });
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+  };
+
+  const handleQuickAddNote = () => {
+    const newNote: CalendarNote = {
+      id: uuidv4(),
+      content: "",
+      color: "bg-yellow-100 border-yellow-200",
+      date: currentDate,
+      createdAt: new Date(),
+      isPinned: false,
+    };
+    handleUpdateNote(newNote);
+  };
+
   return (
     <main className="flex flex-col h-screen bg-gray-50">
       <CalendarHeader
@@ -131,17 +164,21 @@ export default function Home() {
         onWeekChange={handleWeekChange}
         isMobile={isMobile}
         onInsightsClick={() => setIsSidePanelOpen(true)}
+        onAddNote={handleQuickAddNote}
       />
       <div className="flex-1 overflow-hidden">
         <CalendarGrid
           currentDate={currentDate}
           isMobile={isMobile}
           events={events}
+          notes={notes}
           onAddEvent={handleAddEvent}
           onEditEvent={handleEditEvent}
           onDeleteEvent={handleDeleteEvent}
           onEventMove={handleEventMove}
           onOpenDetail={handleOpenDetail}
+          onUpdateNote={handleUpdateNote}
+          onDeleteNote={handleDeleteNote}
         />
       </div>
 

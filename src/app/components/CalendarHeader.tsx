@@ -3,144 +3,92 @@
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  CalendarDaysIcon,
   LightBulbIcon,
 } from "@heroicons/react/24/outline";
-import { format, addDays, addWeeks, startOfWeek, endOfWeek } from "date-fns";
+import { format, addWeeks, subWeeks } from "date-fns";
 import { motion } from "framer-motion";
 
 interface CalendarHeaderProps {
   currentDate: Date;
   onWeekChange: (date: Date) => void;
-  isMobile?: boolean;
+  isMobile: boolean;
   onInsightsClick: () => void;
+  onAddNote?: () => void;
 }
 
 export default function CalendarHeader({
   currentDate,
   onWeekChange,
-  isMobile = false,
+  isMobile,
   onInsightsClick,
+  onAddNote,
 }: CalendarHeaderProps) {
-  const weekStart = startOfWeek(currentDate);
-  const weekEnd = endOfWeek(currentDate);
-
-  const handlePrevious = () => {
-    if (isMobile) {
-      onWeekChange(addDays(currentDate, -1));
-    } else {
-      onWeekChange(addWeeks(currentDate, -1));
-    }
-  };
-
-  const handleNext = () => {
-    if (isMobile) {
-      onWeekChange(addDays(currentDate, 1));
-    } else {
-      onWeekChange(addWeeks(currentDate, 1));
-    }
-  };
-
-  const handleToday = () => {
-    onWeekChange(new Date());
-  };
-
   return (
-    <motion.header
-      className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[var(--color-gray-200)]"
-      initial={false}
-      animate={{
-        boxShadow: "var(--shadow-subtle)",
-        transition: { duration: 0.3, ease: "easeInOut" },
-      }}
-    >
-      <div className="mx-auto max-w-7xl">
-        <div className="flex h-16 items-center justify-between px-6">
-          {/* Navigation Controls */}
-          <div className="flex items-center gap-1.5">
+    <header className="bg-white border-b border-gray-200 py-3 px-4 md:py-4 md:px-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-0">
+        <div className="flex items-center gap-3 md:gap-4">
+          <h1 className="text-lg md:text-xl font-semibold text-gray-900">
+            Calendar
+          </h1>
+          <div className="flex items-center gap-1 md:gap-2">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={handlePrevious}
-              className="relative p-2.5 rounded-xl bg-[var(--color-gray-100)]
-                       hover:bg-[var(--color-gray-200)] active:bg-[var(--color-gray-300)]
-                       transition-colors group"
-              aria-label={isMobile ? "Previous day" : "Previous week"}
+              onClick={() => onWeekChange(subWeeks(currentDate, 1))}
+              className="p-1.5 rounded-lg hover:bg-gray-100"
             >
-              <ChevronLeftIcon
-                className="h-5 w-5 text-[var(--color-gray-500)]
-                                       group-hover:text-[var(--color-gray-900)]
-                                       transition-colors"
-              />
+              <ChevronLeftIcon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={handleNext}
-              className="relative p-2.5 rounded-xl bg-[var(--color-gray-100)]
-                       hover:bg-[var(--color-gray-200)] active:bg-[var(--color-gray-300)]
-                       transition-colors group"
-              aria-label={isMobile ? "Next day" : "Next week"}
-            >
-              <ChevronRightIcon
-                className="h-5 w-5 text-[var(--color-gray-500)]
-                                        group-hover:text-[var(--color-gray-900)]
-                                        transition-colors"
-              />
-            </motion.button>
-          </div>
-
-          {/* Date Range Display */}
-          <motion.div className="flex flex-col items-center" layout>
-            <h1 className="text-lg font-semibold tracking-[-0.01em] text-[var(--color-gray-900)]">
-              {isMobile ? (
-                <span>{format(currentDate, "MMMM d, yyyy")}</span>
-              ) : (
-                <>
-                  <span className="hidden sm:inline">
-                    {format(weekStart, "MMMM d")}
-                    <span className="mx-2 text-[var(--color-gray-400)]">—</span>
-                    {format(weekEnd, "MMMM d, yyyy")}
-                  </span>
-                  <span className="sm:hidden">
-                    {format(weekStart, "MMM d")}
-                    <span className="mx-1.5 text-[var(--color-gray-400)]">
-                      —
-                    </span>
-                    {format(weekEnd, "MMM d")}
-                  </span>
-                </>
-              )}
-            </h1>
-          </motion.div>
-
-          {/* Today Button and Insights */}
-          <div className="flex items-center gap-2">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleToday}
-              className="relative px-5 py-2 rounded-xl bg-[var(--color-primary)]
-                       text-sm font-medium text-white tracking-[-0.01em]
-                       hover:bg-[var(--color-primary-light)]
-                       active:bg-[var(--color-primary-dark)]
-                       transition-colors"
+              onClick={() => onWeekChange(new Date())}
+              className="px-2.5 py-1 md:px-3 md:py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg"
             >
               Today
             </motion.button>
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={onInsightsClick}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-900 
-                       text-sm font-medium text-white tracking-[-0.01em]
-                       hover:bg-gray-800 active:bg-gray-700 transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => onWeekChange(addWeeks(currentDate, 1))}
+              className="p-1.5 rounded-lg hover:bg-gray-100"
             >
-              <LightBulbIcon className="w-4 h-4" />
-              <span>Insights</span>
+              <ChevronRightIcon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
             </motion.button>
           </div>
+          <span className="text-base md:text-lg font-medium text-gray-600">
+            {format(currentDate, isMobile ? "MMM yyyy" : "MMMM yyyy")}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 md:gap-3">
+          {onAddNote && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onAddNote}
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-3 py-1.5 md:py-2 
+                       text-sm font-medium text-yellow-700 bg-yellow-50 rounded-lg 
+                       hover:bg-yellow-100 transition-colors"
+            >
+              <LightBulbIcon className="w-4 h-4" />
+              <span className="md:inline">Add Note</span>
+            </motion.button>
+          )}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onInsightsClick}
+            className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-3 py-1.5 md:py-2 
+                     text-sm font-medium text-blue-700 bg-blue-50 rounded-lg 
+                     hover:bg-blue-100 transition-colors"
+          >
+            <CalendarDaysIcon className="w-4 h-4" />
+            <span className="md:inline">Insights</span>
+          </motion.button>
         </div>
       </div>
-    </motion.header>
+    </header>
   );
 }
