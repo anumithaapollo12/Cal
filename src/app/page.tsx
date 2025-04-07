@@ -11,12 +11,13 @@ import SidePanel from "./components/SidePanel";
 import YearProgressBar from "./components/YearProgressBar";
 import { Event } from "./types/Event";
 import { CalendarNote } from "./components/CalendarNote";
+import { useLocalStorage } from "./hooks/useLocalStorage";
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [notes, setNotes] = useState<CalendarNote[]>([]);
+  const [events, setEvents] = useLocalStorage<Event[]>("events", []);
+  const [notes, setNotes] = useLocalStorage<CalendarNote[]>("notes", []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -33,18 +34,14 @@ export default function Home() {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
 
   useEffect(() => {
-    // Check if we're on mobile
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
 
-    // Initial check
     checkMobile();
 
-    // Add event listener for window resize
     let timeoutId: NodeJS.Timeout | null = null;
     const handleResize = () => {
-      // Debounce the resize event
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = setTimeout(checkMobile, 150);
     };
@@ -78,14 +75,12 @@ export default function Home() {
 
   const handleEventSubmit = (eventData: Omit<Event, "id">) => {
     if (editingEvent) {
-      // Update existing event
       setEvents(
         events.map((event) =>
           event.id === editingEvent.id ? { ...eventData, id: event.id } : event
         )
       );
     } else {
-      // Create new event
       setEvents([...events, { ...eventData, id: uuidv4() }]);
     }
     setIsModalOpen(false);
@@ -127,22 +122,22 @@ export default function Home() {
   };
 
   const handleUpdateNote = (note: CalendarNote) => {
-    setNotes((prevNotes) => {
+    setNotes((prevNotes: CalendarNote[]) => {
       const existingNoteIndex = prevNotes.findIndex((n) => n.id === note.id);
       if (existingNoteIndex >= 0) {
-        // Update existing note
         const updatedNotes = [...prevNotes];
         updatedNotes[existingNoteIndex] = note;
         return updatedNotes;
       } else {
-        // Add new note
         return [...prevNotes, note];
       }
     });
   };
 
   const handleDeleteNote = (noteId: string) => {
-    setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+    setNotes((prevNotes: CalendarNote[]) =>
+      prevNotes.filter((note) => note.id !== noteId)
+    );
   };
 
   const handleQuickAddNote = () => {
