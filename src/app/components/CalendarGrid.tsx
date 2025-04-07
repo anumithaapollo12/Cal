@@ -280,19 +280,23 @@ export default function CalendarGrid({
                 {/* Events Container with Modern Styling */}
                 <DroppableDay date={day.date}>
                   <motion.div
-                    className="p-4 relative h-full"
+                    className="p-4 relative h-full cursor-pointer"
                     initial={false}
                     whileHover={{
                       backgroundColor: "rgba(249, 250, 251, 0.8)",
                     }}
                     transition={{ duration: 0.2 }}
                   >
+                    <div
+                      className="absolute inset-0"
+                      onClick={() => onAddEvent(day.date)}
+                    />
                     <SortableContext
                       items={getEventsForDay(day.date).map((e) => e.id)}
                       strategy={verticalListSortingStrategy}
                     >
                       <motion.div
-                        className="space-y-3"
+                        className="space-y-3 relative z-10"
                         initial={false}
                         animate={{
                           opacity: 1,
@@ -320,45 +324,10 @@ export default function CalendarGrid({
                         transition={{ delay: 0.2 }}
                       >
                         <p className="text-sm text-gray-400/70 font-medium">
-                          No events
+                          Click to add event
                         </p>
                       </motion.div>
                     )}
-
-                    {/* Modern Add Event Button */}
-                    <motion.button
-                      whileHover={{
-                        scale: 1.05,
-                        boxShadow: "0 8px 20px -4px rgba(0, 0, 0, 0.1)",
-                      }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => onAddEvent(day.date)}
-                      className="absolute bottom-4 right-4 rounded-xl bg-gray-900 p-2.5 text-white 
-                        shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 
-                        focus:ring-gray-900 focus:ring-offset-2 z-10 transition-all duration-200"
-                    >
-                      <motion.svg
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        initial={false}
-                        animate={{ rotate: 0 }}
-                        whileHover={{ rotate: 90 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 200,
-                          damping: 10,
-                        }}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        />
-                      </motion.svg>
-                    </motion.button>
                   </motion.div>
                 </DroppableDay>
               </motion.div>
