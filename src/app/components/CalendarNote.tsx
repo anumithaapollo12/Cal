@@ -34,15 +34,24 @@ export default function CalendarNote({
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(note.content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isFirstEdit = useRef(true);
 
   // Focus textarea when editing starts
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus();
+      if (isFirstEdit.current) {
+        textareaRef.current.setSelectionRange(0, content.length);
+        isFirstEdit.current = false;
+      }
+    } else {
+      isFirstEdit.current = true;
     }
   }, [isEditing]);
 
-  const startEditing = () => {
+  const startEditing = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsEditing(true);
   };
 
@@ -60,9 +69,14 @@ export default function CalendarNote({
     }
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     onDelete(note.id);
+  };
+
+  const handleTextareaTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
   };
 
   return (
@@ -70,6 +84,7 @@ export default function CalendarNote({
       className={`group relative p-3 rounded-lg border shadow-sm md:max-w-[200px] w-full
         ${note.color} hover:shadow-md transition-all duration-200`}
       onDoubleClick={startEditing}
+      onTouchEnd={startEditing}
     >
       {isEditing ? (
         <textarea
@@ -78,6 +93,7 @@ export default function CalendarNote({
           onChange={(e) => setContent(e.target.value)}
           onBlur={saveNote}
           onKeyDown={handleKeyDown}
+          onTouchStart={handleTextareaTouchStart}
           className="w-full bg-transparent resize-none focus:outline-none
                    text-sm text-gray-700 min-h-[60px]"
           placeholder="Write your note..."
@@ -85,12 +101,13 @@ export default function CalendarNote({
         />
       ) : (
         <p className="text-sm whitespace-pre-wrap text-gray-700 min-h-[60px]">
-          {content || "Double-click to add note"}
+          {content || "Tap to add note"}
         </p>
       )}
 
       <button
         onClick={handleDelete}
+        onTouchEnd={handleDelete}
         className="absolute top-2 right-2 p-1 rounded-full bg-white/80 hover:bg-white
                  text-gray-500 hover:text-red-500 shadow-sm opacity-0 group-hover:opacity-100
                  transition-opacity duration-200"
