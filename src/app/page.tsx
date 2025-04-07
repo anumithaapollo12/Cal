@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
+import dynamic from "next/dynamic";
 import CalendarHeader from "./components/CalendarHeader";
-import CalendarGrid from "./components/CalendarGrid";
 import Modal from "./components/Modal";
 import EventForm from "./components/EventForm";
 import EventDetail from "./components/EventDetail";
@@ -13,8 +13,13 @@ import { Event } from "./types/Event";
 import { CalendarNote } from "./components/CalendarNote";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 
+// Dynamically import CalendarGrid with no SSR
+const CalendarGrid = dynamic(() => import("./components/CalendarGrid"), {
+  ssr: false,
+});
+
 export default function Home() {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [isMobile, setIsMobile] = useState(false);
   const [events, setEvents] = useLocalStorage<Event[]>("events", []);
   const [notes, setNotes] = useLocalStorage<CalendarNote[]>("notes", []);
@@ -32,8 +37,15 @@ export default function Home() {
     | undefined
   >(undefined);
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
@@ -151,6 +163,10 @@ export default function Home() {
     };
     handleUpdateNote(newNote);
   };
+
+  if (!isClient) {
+    return <div className="flex flex-col h-screen bg-gray-50" />;
+  }
 
   return (
     <main className="flex flex-col h-screen bg-gray-50">
