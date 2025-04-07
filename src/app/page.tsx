@@ -8,6 +8,7 @@ import Modal from "./components/Modal";
 import EventForm from "./components/EventForm";
 import EventDetail from "./components/EventDetail";
 import SidePanel from "./components/SidePanel";
+import YearProgressBar from "./components/YearProgressBar";
 import { Event } from "./types/Event";
 
 export default function Home() {
@@ -143,6 +144,8 @@ export default function Home() {
           onOpenDetail={handleOpenDetail}
         />
       </div>
+
+      <YearProgressBar isBlurred={isSidePanelOpen} />
 
       <Modal
         isOpen={isModalOpen}

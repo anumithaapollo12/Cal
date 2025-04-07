@@ -7,11 +7,13 @@ import { getQuarter, getMonth, getDaysInMonth, getDate } from "date-fns";
 interface YearProgressBarProps {
   startYear?: number;
   endYear?: number;
+  isBlurred?: boolean;
 }
 
 export default function YearProgressBar({
   startYear = new Date().getFullYear(),
   endYear = startYear + 1,
+  isBlurred = false,
 }: YearProgressBarProps) {
   const [progress, setProgress] = useState(0);
   const [currentQuarter, setCurrentQuarter] = useState(0);
@@ -52,8 +54,11 @@ export default function YearProgressBar({
 
   return (
     <motion.div
-      className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200
-                 flex items-center justify-center z-[60] h-20 py-5"
+      className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200
+                 flex items-center justify-center h-20 py-5 z-[40]
+                 transition-all duration-300 ${
+                   isBlurred ? "opacity-50 blur-[2px]" : ""
+                 }`}
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
