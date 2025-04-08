@@ -121,20 +121,20 @@ export default function CalendarGrid({
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
       distance: 8,
-      delay: 0,
-      tolerance: 0,
+      delay: 150,
+      tolerance: 5,
     },
   });
 
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
-      delay: 200,
+      delay: 150,
       tolerance: 5,
-      distance: 0,
+      distance: 5,
     },
   });
 
-  const sensors = useSensors(mouseSensor, isMobile ? touchSensor : null);
+  const sensors = useSensors(mouseSensor, touchSensor);
 
   const startDate = isMobile ? viewDate : startOfWeek(currentDate);
 
@@ -302,6 +302,25 @@ export default function CalendarGrid({
     }
   };
 
+  // Create a handler for opening event details that calls the parent handler
+  const handleOpenDetail = useCallback(
+    (event: Event) => {
+      const element = document.getElementById(`event-${event.id}`);
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        onOpenDetail(event, {
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height,
+        });
+      } else {
+        onOpenDetail(event);
+      }
+    },
+    [onOpenDetail]
+  );
+
   return (
     <div className="relative h-full">
       <DndContext
@@ -409,14 +428,15 @@ export default function CalendarGrid({
                         }}
                       >
                         {getEventsForDay(day.date).map((event) => (
-                          <EventCard
-                            key={event.id}
-                            event={event}
-                            onEdit={onEditEvent}
-                            onDelete={onDeleteEvent}
-                            onOpenDetail={onOpenDetail}
-                            isDragging={event.id === activeId}
-                          />
+                          <div key={event.id} id={`event-${event.id}`}>
+                            <EventCard
+                              event={event}
+                              onEdit={onEditEvent}
+                              onDelete={onDeleteEvent}
+                              onOpenDetail={handleOpenDetail}
+                              isDragging={event.id === activeId}
+                            />
+                          </div>
                         ))}
                       </motion.div>
                     </SortableContext>
@@ -462,7 +482,7 @@ export default function CalendarGrid({
                 event={activeEvent}
                 onEdit={onEditEvent}
                 onDelete={onDeleteEvent}
-                onOpenDetail={onOpenDetail}
+                onOpenDetail={handleOpenDetail}
                 isDragging={true}
               />
             </motion.div>

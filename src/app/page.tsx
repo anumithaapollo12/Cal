@@ -10,6 +10,7 @@ import EventDetail from "./components/EventDetail";
 import SidePanel from "./components/SidePanel";
 import YearProgressBar from "./components/YearProgressBar";
 import { Event } from "./types/Event";
+import { LifeEvent } from "./types";
 import { CalendarNote } from "./components/CalendarNote";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 
@@ -22,11 +23,18 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [isMobile, setIsMobile] = useState(false);
   const [events, setEvents] = useLocalStorage<Event[]>("events", []);
+  const [lifeEvents, setLifeEvents] = useState<LifeEvent[]>(() => {
+    if (typeof window === "undefined") return [];
+    const saved = localStorage.getItem("calendar-life-events");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [notes, setNotes] = useLocalStorage<CalendarNote[]>("notes", []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | LifeEvent | null>(
+    null
+  );
   const [cardPosition, setCardPosition] = useState<
     | {
         top: number;
@@ -38,6 +46,30 @@ export default function Home() {
   >(undefined);
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
+
+  // Save life events to localStorage when they change
+  useEffect(() => {
+    if (lifeEvents.length > 0) {
+      localStorage.setItem("calendar-life-events", JSON.stringify(lifeEvents));
+    }
+  }, [lifeEvents]);
+
+  // Convert life events to calendar events
+  const convertedLifeEvents = lifeEvents.map(
+    (lifeEvent): Event => ({
+      id: lifeEvent.id,
+      title: lifeEvent.title,
+      description: lifeEvent.note,
+      startTime: new Date(lifeEvent.date),
+      endTime: new Date(lifeEvent.date),
+      color: lifeEvent.color || "bg-gray-100",
+      type: lifeEvent.type,
+      isLifeEvent: true,
+    })
+  );
+
+  // Combine regular events and converted life events
+  const allEvents = [...events, ...convertedLifeEvents];
 
   useEffect(() => {
     setIsClient(true);
@@ -126,9 +158,10 @@ export default function Home() {
   };
 
   const handleOpenDetail = (
-    event: Event,
+    event: Event | LifeEvent,
     position?: { top: number; left: number; width: number; height: number }
   ) => {
+    console.log("Opening detail for event:", event);
     setSelectedEvent(event);
     setCardPosition(position);
   };
@@ -164,6 +197,11 @@ export default function Home() {
     handleUpdateNote(newNote);
   };
 
+  // Add handler for life events
+  const handleAddLifeEvent = (lifeEvent: LifeEvent) => {
+    setLifeEvents((prev) => [...prev, lifeEvent]);
+  };
+
   if (!isClient) {
     return <div className="flex flex-col h-screen bg-gray-50" />;
   }
@@ -181,7 +219,7 @@ export default function Home() {
         <CalendarGrid
           currentDate={currentDate}
           isMobile={isMobile}
-          events={events}
+          events={allEvents}
           notes={notes}
           onAddEvent={handleAddEvent}
           onEditEvent={handleEditEvent}
@@ -193,7 +231,7 @@ export default function Home() {
         />
       </div>
 
-      <YearProgressBar isBlurred={isSidePanelOpen} />
+      <YearProgressBar isBlurred={isSidePanelOpen || !!selectedEvent} />
 
       <Modal
         isOpen={isModalOpen}
@@ -216,18 +254,33 @@ export default function Home() {
         />
       </Modal>
 
-      <EventDetail
-        event={selectedEvent}
-        isOpen={!!selectedEvent}
-        onClose={() => {
-          setSelectedEvent(null);
-          setCardPosition(undefined);
-        }}
-      />
+      {/* Event Detail Modal */}
+      {selectedEvent && (
+        <div className="fixed inset-0 z-[99999] overflow-hidden">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => {
+              setSelectedEvent(null);
+              setCardPosition(undefined);
+            }}
+          />
+          <div className="relative z-[99999] flex items-center justify-center min-h-screen p-4">
+            <EventDetail
+              event={selectedEvent}
+              onClose={() => {
+                console.log("Closing event detail");
+                setSelectedEvent(null);
+                setCardPosition(undefined);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <SidePanel
         isOpen={isSidePanelOpen}
         onClose={() => setIsSidePanelOpen(false)}
+        onAddLifeEvent={handleAddLifeEvent}
       />
     </main>
   );

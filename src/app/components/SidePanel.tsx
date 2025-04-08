@@ -27,6 +27,7 @@ import EventDetail from "./EventDetail";
 interface SidePanelProps {
   isOpen: boolean;
   onClose: () => void;
+  onAddLifeEvent?: (event: LifeEvent) => void;
 }
 
 interface Note {
@@ -64,7 +65,11 @@ interface LifeEvent {
   repeatsAnnually?: boolean;
 }
 
-export default function SidePanel({ isOpen, onClose }: SidePanelProps) {
+export default function SidePanel({
+  isOpen,
+  onClose,
+  onAddLifeEvent,
+}: SidePanelProps) {
   const [activeTab, setActiveTab] = useState<"upcoming" | "goals" | "notes">(
     "upcoming"
   );
@@ -203,6 +208,7 @@ export default function SidePanel({ isOpen, onClose }: SidePanelProps) {
     };
 
     setLifeEvents([...lifeEvents, newEventObj]);
+    onAddLifeEvent?.(newEventObj);
     setShowNewEventForm(false);
     setNewEvent({
       type: "birthday",

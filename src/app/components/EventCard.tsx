@@ -4,9 +4,10 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
+import type { DraggableSyntheticListeners } from "@dnd-kit/core";
 import { Event } from "../types/Event";
 import { TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import Image from "next/image";
 
 interface EventCardProps {
@@ -28,6 +29,8 @@ export default function EventCard({
   isDragging = false,
 }: EventCardProps) {
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const {
     attributes,
     listeners,
@@ -44,17 +47,60 @@ export default function EventCard({
     transition,
   };
 
-  function handleCardClick(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't open detail if clicking edit or delete buttons
     const target = e.target as HTMLElement;
     if (target.closest(".edit-button") || target.closest(".delete-button")) {
       return;
     }
 
-    onOpenDetail(event);
-  }
+    // Don't trigger click if we're dragging
+    if (isDragging || isSorting) return;
+
+    // Set a small timeout to differentiate between click and drag
+    clickTimeoutRef.current = setTimeout(() => {
+      if (cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        onOpenDetail(event, {
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height,
+        });
+      } else {
+        onOpenDetail(event);
+      }
+    }, 0);
+  };
+
+  const handleDragStart = () => {
+    // Clear the click timeout if drag starts
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+    }
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onEdit(event);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete(event.id);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <motion.div
@@ -66,6 +112,7 @@ export default function EventCard({
       {...attributes}
       {...listeners}
       onClick={handleCardClick}
+      onDragStart={handleDragStart}
       className={`group relative card-premium overflow-hidden cursor-pointer
         ${isDragging ? "z-50" : ""}`}
       initial={false}
@@ -164,14 +211,14 @@ export default function EventCard({
 
           {/* Action Buttons */}
           <motion.div
+            className="flex items-center gap-2 pt-1 opacity-0 translate-y-1
+                      group-hover:opacity-100 group-hover:translate-y-0 
+                      transition-all duration-300 ease-out"
             initial={{ opacity: 0, y: 8 }}
             animate={{
               opacity: isDragging ? 0 : 1,
               y: isDragging ? 8 : 0,
             }}
-            className="flex items-center gap-2 pt-1 opacity-0 translate-y-1
-                      group-hover:opacity-100 group-hover:translate-y-0 
-                      transition-all duration-300 ease-out"
           >
             <motion.button
               type="button"
@@ -180,14 +227,7 @@ export default function EventCard({
               className="edit-button p-2 rounded-xl bg-[var(--color-gray-100)]
                        hover:bg-[var(--color-gray-200)] active:bg-[var(--color-gray-300)]
                        transition-all duration-300"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onEdit(event);
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
+              onClick={handleEditClick}
             >
               <PencilIcon
                 className="w-4 h-4 text-[var(--color-gray-500)]
@@ -201,16 +241,9 @@ export default function EventCard({
               className="delete-button p-2 rounded-xl bg-red-50
                        hover:bg-red-100 active:bg-red-200
                        transition-all duration-300"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onDelete(event.id);
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
+              onClick={handleDeleteClick}
             >
-              <TrashIcon className="w-4 h-4 text-[var(--color-error)]" />
+              <TrashIcon className="w-4 h-4 text-red-500" />
             </motion.button>
           </motion.div>
         </div>
