@@ -55,9 +55,7 @@ export default function Home() {
 
   // Save life events to localStorage when they change
   useEffect(() => {
-    if (lifeEvents.length > 0) {
-      localStorage.setItem("calendar-life-events", JSON.stringify(lifeEvents));
-    }
+    localStorage.setItem("calendar-life-events", JSON.stringify(lifeEvents));
   }, [lifeEvents]);
 
   // Convert life events to calendar events
@@ -121,7 +119,15 @@ export default function Home() {
 
   // Add handler for deleting life events
   const handleDeleteLifeEvent = (eventId: string) => {
-    setLifeEvents((prev) => prev.filter((event) => event.id !== eventId));
+    setLifeEvents((prev) => {
+      const updatedEvents = prev.filter((event) => event.id !== eventId);
+      // Update localStorage immediately after state change
+      localStorage.setItem(
+        "calendar-life-events",
+        JSON.stringify(updatedEvents)
+      );
+      return updatedEvents;
+    });
   };
 
   const handleDeleteEvent = (eventId: string) => {
