@@ -15,6 +15,7 @@ export interface Event {
   color?: string;
   location?: string;
   image?: string;
+  imageAlt?: string;
   isLifeEvent?: boolean;
   priority?: "low" | "medium" | "high";
   recurring?: "daily" | "weekly" | "monthly" | "yearly";

@@ -200,7 +200,13 @@ export default function EventCard({
             <div className="relative w-full h-32 overflow-hidden">
               <Image
                 src={event.image}
-                alt={event.imageAlt || event.title}
+                alt={
+                  event.imageAlt ||
+                  `${event.title} - ${format(
+                    new Date(event.startTime),
+                    "MMM d, yyyy"
+                  )}`
+                }
                 fill
                 className="object-cover"
                 loading="lazy"
