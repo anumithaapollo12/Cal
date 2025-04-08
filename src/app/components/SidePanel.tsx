@@ -782,7 +782,7 @@ export default function SidePanel({
                       placeholder="Write a note..."
                       className="w-full p-4 rounded-xl border-0 bg-gray-50
                         focus:ring-2 focus:ring-blue-500 text-gray-900
-                        resize-none min-h-[120px]"
+                        resize-none min-h-[120px] touch-none"
                     />
                     <button
                       onClick={addNote}
@@ -802,14 +802,14 @@ export default function SidePanel({
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="group p-4 bg-white rounded-xl border border-gray-100
-                          hover:border-gray-200 transition-colors"
+                          hover:border-gray-200 transition-colors touch-none"
                       >
                         <div className="flex items-start gap-4">
                           <div className="flex-1">
-                            <p className="text-gray-900 whitespace-pre-wrap">
+                            <p className="text-gray-900 whitespace-pre-wrap select-none">
                               {note.content}
                             </p>
-                            <span className="block mt-2 text-xs text-gray-500">
+                            <span className="block mt-2 text-xs text-gray-500 select-none">
                               {format(new Date(note.createdAt), "MMM d, yyyy")}
                             </span>
                           </div>

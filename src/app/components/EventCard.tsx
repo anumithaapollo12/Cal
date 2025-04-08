@@ -117,15 +117,6 @@ export default function EventCard({
       {/* Mobile Action Bar */}
       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between p-3 bg-white border-t border-gray-100 z-50 sm:hidden">
         <div className="flex gap-2">
-          {onEdit && !event.isLifeEvent && (
-            <button
-              onClick={handleEditClick}
-              className="p-2.5 rounded-full bg-gray-50 active:scale-95 transition-transform duration-200 touch-none"
-              aria-label="Edit event"
-            >
-              <PencilIcon className="w-5 h-5 text-[#222222]" />
-            </button>
-          )}
           {onDelete && (
             <button
               onClick={handleDeleteClick}
@@ -153,15 +144,6 @@ export default function EventCard({
         className="absolute top-4 right-4 hidden sm:flex gap-2 z-50 opacity-0 group-hover:opacity-100 transition-all duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {onEdit && !event.isLifeEvent && (
-          <button
-            onClick={handleEditClick}
-            className="p-2.5 rounded-full bg-white shadow-lg active:scale-95 transition-transform duration-200"
-            aria-label="Edit event"
-          >
-            <PencilIcon className="w-4 h-4 text-[#222222]" />
-          </button>
-        )}
         {onDelete && (
           <button
             onClick={handleDeleteClick}
