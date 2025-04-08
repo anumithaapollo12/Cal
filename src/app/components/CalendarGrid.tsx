@@ -38,6 +38,7 @@ import {
 import { useState, useMemo, useCallback, useEffect } from "react";
 import SidePanel from "./SidePanel";
 import { v4 as uuidv4 } from "uuid";
+import EventCardWrapper from "./EventCardWrapper";
 
 const COLORS = [
   "bg-yellow-100 border-yellow-200",
@@ -120,15 +121,14 @@ export default function CalendarGrid({
 
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
-      distance: 8,
-      delay: 150,
-      tolerance: 5,
+      distance: 5,
+      delay: 0,
     },
   });
 
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
-      delay: 150,
+      delay: 300,
       tolerance: 5,
       distance: 5,
     },
@@ -325,7 +325,6 @@ export default function CalendarGrid({
     <div className="relative h-full">
       <DndContext
         sensors={sensors}
-        collisionDetection={pointerWithin}
         onDragStart={handleDragStart}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
@@ -429,12 +428,11 @@ export default function CalendarGrid({
                       >
                         {getEventsForDay(day.date).map((event) => (
                           <div key={event.id} id={`event-${event.id}`}>
-                            <EventCard
+                            <EventCardWrapper
                               event={event}
                               onEdit={onEditEvent}
                               onDelete={onDeleteEvent}
                               onOpenDetail={handleOpenDetail}
-                              isDragging={event.id === activeId}
                             />
                           </div>
                         ))}
@@ -478,12 +476,11 @@ export default function CalendarGrid({
               }}
               className="transform-gpu touch-none"
             >
-              <EventCard
+              <EventCardWrapper
                 event={activeEvent}
                 onEdit={onEditEvent}
                 onDelete={onDeleteEvent}
                 onOpenDetail={handleOpenDetail}
-                isDragging={true}
               />
             </motion.div>
           ) : null}
