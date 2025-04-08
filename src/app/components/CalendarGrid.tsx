@@ -36,7 +36,6 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useState, useMemo, useCallback, useEffect } from "react";
-import SidePanel from "./SidePanel";
 import { v4 as uuidv4 } from "uuid";
 import EventCardWrapper from "./EventCardWrapper";
 
@@ -111,7 +110,6 @@ export default function CalendarGrid({
   const [dragStartX, setDragStartX] = useState<number | null>(null);
   const [lastMoveX, setLastMoveX] = useState<number | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<number>(0);
-  const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
 
   useEffect(() => {
     setViewDate(currentDate);
@@ -329,6 +327,7 @@ export default function CalendarGrid({
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
+        collisionDetection={pointerWithin}
       >
         <motion.div className="flex-1 overflow-hidden bg-white/60">
           <motion.div
@@ -459,38 +458,27 @@ export default function CalendarGrid({
           </motion.div>
         </motion.div>
 
-        <DragOverlay dropAnimation={null}>
-          {activeId && activeEvent ? (
-            <motion.div
-              initial={false}
-              animate={{
-                scale: 1.05,
-                boxShadow:
-                  "0 16px 32px -4px rgba(0, 0, 0, 0.1), 0 8px 16px -4px rgba(0, 0, 0, 0.1)",
-                rotate: 0,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 30,
-              }}
-              className="transform-gpu touch-none"
-            >
-              <EventCardWrapper
-                event={activeEvent}
-                onEdit={onEditEvent}
-                onDelete={onDeleteEvent}
-                onOpenDetail={handleOpenDetail}
-              />
-            </motion.div>
-          ) : null}
+        <DragOverlay>
+          {activeId && (activeEvent || activeNote) && (
+            <div className="transform scale-105 opacity-90">
+              {activeEvent && (
+                <EventCard
+                  event={activeEvent}
+                  isDragging={true}
+                  isDragEnabled={true}
+                />
+              )}
+              {activeNote && (
+                <CalendarNote
+                  note={activeNote}
+                  onUpdate={onUpdateNote}
+                  onDelete={onDeleteNote}
+                />
+              )}
+            </div>
+          )}
         </DragOverlay>
       </DndContext>
-
-      <SidePanel
-        isOpen={isSidePanelOpen}
-        onClose={() => setIsSidePanelOpen(false)}
-      />
     </div>
   );
 }
