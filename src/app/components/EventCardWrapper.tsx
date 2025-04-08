@@ -4,12 +4,18 @@ import { useSortable } from "@dnd-kit/sortable";
 import { Event } from "../types/Event";
 import EventCard from "./EventCard";
 import useLongPress from "../hooks/useLongPress";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { format } from "date-fns";
 
 interface EventCardWrapperProps {
   event: Event;
   onEdit: (event: Event) => void;
   onDelete: (eventId: string) => void;
-  onOpenDetail: (event: Event) => void;
+  onOpenDetail: (
+    event: Event,
+    position?: { top: number; left: number; width: number; height: number }
+  ) => void;
+  isCompact?: boolean;
 }
 
 export default function EventCardWrapper({
@@ -17,6 +23,7 @@ export default function EventCardWrapper({
   onEdit,
   onDelete,
   onOpenDetail,
+  isCompact,
 }: EventCardWrapperProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [hasMoved, setHasMoved] = useState(false);
@@ -177,13 +184,47 @@ export default function EventCardWrapper({
       {...eventHandlers}
       className="touch-none select-none"
     >
-      <EventCard
-        event={event}
-        isDragging={isSorting}
-        isDragEnabled={isDragging}
-        onEdit={onEdit}
-        onDelete={onDelete}
-      />
+      <div
+        className={`group relative rounded-lg border ${
+          event.color || "bg-white"
+        } ${isCompact ? "p-1" : "p-3"} hover:shadow-md transition-shadow`}
+      >
+        {!isCompact && (
+          <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(event);
+              }}
+              className="p-1 rounded hover:bg-gray-100"
+            >
+              <PencilIcon className="w-4 h-4 text-gray-500" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(event.id);
+              }}
+              className="p-1 rounded hover:bg-gray-100"
+            >
+              <TrashIcon className="w-4 h-4 text-gray-500" />
+            </button>
+          </div>
+        )}
+        <div className={isCompact ? "text-xs truncate" : ""}>
+          {!isCompact && (
+            <div className="text-xs text-gray-500 mb-1">
+              {format(new Date(event.startTime), "h:mm a")}
+            </div>
+          )}
+          <div className="font-medium text-gray-900">{event.title}</div>
+          {!isCompact && event.description && (
+            <div className="text-sm text-gray-500 mt-1 line-clamp-2">
+              {event.description}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -14,14 +14,19 @@ import { Event } from "./types/Event";
 import { LifeEvent } from "./types";
 import { CalendarNote } from "./components/CalendarNote";
 import { useLocalStorage } from "./hooks/useLocalStorage";
+import MonthView from "./components/MonthView";
+import YearView from "./components/YearView";
 
 // Dynamically import CalendarGrid with no SSR
 const CalendarGrid = dynamic(() => import("./components/CalendarGrid"), {
   ssr: false,
 });
 
+type CalendarView = "week" | "month" | "year";
+
 export default function Home() {
   const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [currentView, setCurrentView] = useState<CalendarView>("week");
   const [isMobile, setIsMobile] = useState(false);
   const [events, setEvents] = useLocalStorage<Event[]>("events", []);
   const [lifeEvents, setLifeEvents] = useState<LifeEvent[]>(() => {
@@ -215,25 +220,53 @@ export default function Home() {
         isMobile={isMobile}
         onInsightsClick={() => setIsSidePanelOpen(true)}
         onAddNote={handleQuickAddNote}
+        currentView={currentView}
+        onViewChange={setCurrentView}
       />
       <MobileDatePicker
         currentDate={currentDate}
         onDateChange={setCurrentDate}
       />
       <div className="flex-1 overflow-y-auto">
-        <CalendarGrid
-          currentDate={currentDate}
-          isMobile={isMobile}
-          events={allEvents}
-          notes={notes}
-          onAddEvent={handleAddEvent}
-          onEditEvent={handleEditEvent}
-          onDeleteEvent={handleDeleteEvent}
-          onEventMove={handleEventMove}
-          onOpenDetail={handleOpenDetail}
-          onUpdateNote={handleUpdateNote}
-          onDeleteNote={handleDeleteNote}
-        />
+        {currentView === "week" && (
+          <CalendarGrid
+            currentDate={currentDate}
+            isMobile={isMobile}
+            events={allEvents}
+            notes={notes}
+            onAddEvent={handleAddEvent}
+            onEditEvent={handleEditEvent}
+            onDeleteEvent={handleDeleteEvent}
+            onEventMove={handleEventMove}
+            onOpenDetail={handleOpenDetail}
+            onUpdateNote={handleUpdateNote}
+            onDeleteNote={handleDeleteNote}
+          />
+        )}
+        {currentView === "month" && (
+          <MonthView
+            currentDate={currentDate}
+            events={allEvents}
+            notes={notes}
+            onAddEvent={handleAddEvent}
+            onEditEvent={handleEditEvent}
+            onDeleteEvent={handleDeleteEvent}
+            onOpenDetail={handleOpenDetail}
+            onUpdateNote={handleUpdateNote}
+            onDeleteNote={handleDeleteNote}
+          />
+        )}
+        {currentView === "year" && (
+          <YearView
+            currentDate={currentDate}
+            events={allEvents}
+            notes={notes}
+            onMonthClick={(date) => {
+              setCurrentDate(date);
+              setCurrentView("month");
+            }}
+          />
+        )}
       </div>
 
       <YearProgressBar isBlurred={isSidePanelOpen || !!selectedEvent} />
