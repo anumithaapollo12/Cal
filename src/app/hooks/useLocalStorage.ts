@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { Event } from "../types/Event";
 import { CalendarNote } from "../components/CalendarNote";
-import { LifeEvent, Goal } from "../types";
+import { LifeEvent } from "../types";
+import { Goal } from "../types/Goal";
 
 type StorageKey =
   | "calendar-events"
