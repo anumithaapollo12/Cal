@@ -85,36 +85,23 @@ export default function SidePanel({
   const [newNote, setNewNote] = useState("");
   const [goals, setGoals] = useState<Goal[]>(() => {
     const saved = localStorage.getItem("calendar-goals");
-    return saved
-      ? JSON.parse(saved)
-      : [
-          {
-            id: "1",
-            title: "Read 12 books this year",
-            progress: 25,
-            category: "learning",
-          },
-          {
-            id: "2",
-            title: "Exercise 3 times a week",
-            progress: 66,
-            category: "health",
-          },
-        ];
+    return saved ? JSON.parse(saved) : [];
   });
-  const [newGoal, setNewGoal] = useState("");
-  const [newGoalCategory, setNewGoalCategory] =
-    useState<Goal["category"]>("personal");
   const [showNewGoalForm, setShowNewGoalForm] = useState(false);
-
+  const [newGoal, setNewGoal] = useState<Partial<Goal>>({
+    title: "",
+    progress: 0,
+    category: "personal",
+  });
   const [showNewEventForm, setShowNewEventForm] = useState(false);
   const [newEvent, setNewEvent] = useState<Partial<LifeEvent>>({
     type: "birthday",
     repeatsAnnually: true,
     icon: "cake",
   });
-
   const [selectedEvent, setSelectedEvent] = useState<LifeEvent | null>(null);
+
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
   // Save notes to localStorage when they change
   useEffect(() => {
@@ -151,33 +138,39 @@ export default function SidePanel({
     setNotes(notes.filter((note) => note.id !== id));
   };
 
-  const updateGoalProgress = (id: string, progress: number) => {
-    setGoals(
-      goals.map((goal) =>
-        goal.id === id
-          ? { ...goal, progress: Math.min(100, Math.max(0, progress)) }
-          : goal
-      )
-    );
+  const deleteGoal = (id: string) => {
+    setGoals(goals.filter((goal) => goal.id !== id));
   };
 
   const addGoal = () => {
-    if (!newGoal.trim()) return;
+    if (newGoal.title?.trim()) {
+      const goal: Goal = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: newGoal.title.trim(),
+        progress: 0,
+        category: newGoal.category || "personal",
+        ...(newGoal.dueDate && { dueDate: new Date(newGoal.dueDate) }),
+      };
+      setGoals([...goals, goal]);
+      setNewGoal({
+        title: "",
+        progress: 0,
+        category: "personal",
+      });
+      setShowNewGoalForm(false);
+    }
+  };
 
-    const newGoalObj: Goal = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: newGoal,
-      progress: 0,
-      category: newGoalCategory,
-    };
-
-    setGoals([...goals, newGoalObj]);
-    setNewGoal("");
-    setShowNewGoalForm(false);
+  const updateGoalProgress = (id: string, progress: number) => {
+    setGoals(
+      goals.map((goal) => (goal.id === id ? { ...goal, progress } : goal))
+    );
   };
 
   const addLifeEvent = () => {
-    if (!newEvent.title || !newEvent.date) return;
+    if (!newEvent.title?.trim() || !newEvent.date) {
+      return;
+    }
 
     const eventColors = {
       birthday: "bg-pink-100",
@@ -188,7 +181,7 @@ export default function SidePanel({
 
     const newEventObj: LifeEvent = {
       id: Math.random().toString(36).substr(2, 9),
-      title: newEvent.title,
+      title: newEvent.title.trim(),
       date: new Date(newEvent.date),
       type: newEvent.type || "special",
       note: newEvent.note,
@@ -525,268 +518,314 @@ export default function SidePanel({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60]"
             onClick={onClose}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[55]"
           />
 
           {/* Panel */}
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
+            initial={isMobile ? { y: "100%" } : { x: "100%" }}
+            animate={isMobile ? { y: 0 } : { x: 0 }}
+            exit={isMobile ? { y: "100%" } : { x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-[60] overflow-hidden"
+            className={`fixed ${
+              isMobile
+                ? "inset-x-0 bottom-0 rounded-t-3xl max-h-[90vh]"
+                : "right-0 top-0 bottom-0 w-96"
+            } bg-white shadow-2xl z-[61] flex flex-col touch-none`}
           >
-            <div className="h-full flex flex-col">
-              {/* Header */}
-              <div className="p-6 border-b">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold text-gray-900">
-                    Your Space
-                  </h2>
-                  <button
-                    onClick={onClose}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  >
-                    <XMarkIcon className="w-6 h-6 text-gray-500" />
-                  </button>
-                </div>
-
-                {/* Tabs */}
-                <div className="mt-6 flex space-x-4">
-                  <button
-                    onClick={() => setActiveTab("upcoming")}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                      activeTab === "upcoming"
-                        ? "bg-blue-50 text-blue-700"
-                        : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                  >
-                    <CalendarIcon className="w-5 h-5" />
-                    <span>Life Events</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("goals")}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                      activeTab === "goals"
-                        ? "bg-blue-50 text-blue-700"
-                        : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                  >
-                    <SparklesIcon className="w-5 h-5" />
-                    <span>Goals</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("notes")}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                      activeTab === "notes"
-                        ? "bg-blue-50 text-blue-700"
-                        : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                  >
-                    <DocumentTextIcon className="w-5 h-5" />
-                    <span>Notes</span>
-                  </button>
-                </div>
+            {/* Header */}
+            <div className="flex-none p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Life Events
+                </h2>
+                <button
+                  onClick={onClose}
+                  className="p-2 -m-2 text-gray-400 hover:text-gray-500 transition-colors"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
               </div>
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto p-6 pb-24">
-                {activeTab === "notes" && (
-                  <div className="space-y-6">
-                    {/* Add new note */}
-                    <div className="relative">
-                      <textarea
-                        value={newNote}
-                        onChange={(e) => setNewNote(e.target.value)}
-                        placeholder="Write a note... What's on your mind?"
-                        className="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                 min-h-[100px] text-sm resize-none"
+              {/* Mobile Pull Indicator */}
+              {isMobile && (
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-gray-300 rounded-full" />
+              )}
+
+              {/* Tabs */}
+              <div className="mt-6 flex gap-2 overflow-x-auto hide-scrollbar -mx-1 px-1">
+                <button
+                  onClick={() => setActiveTab("upcoming")}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl flex-none transition-colors ${
+                    activeTab === "upcoming"
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <CalendarIcon className="w-5 h-5" />
+                  <span className="text-sm font-medium whitespace-nowrap">
+                    Life Events
+                  </span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("goals")}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl flex-none transition-colors ${
+                    activeTab === "goals"
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <SparklesIcon className="w-5 h-5" />
+                  <span className="text-sm font-medium">Goals</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("notes")}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl flex-none transition-colors ${
+                    activeTab === "notes"
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <DocumentTextIcon className="w-5 h-5" />
+                  <span className="text-sm font-medium">Notes</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto overscroll-contain">
+              {activeTab === "upcoming" && renderLifeEventsTab()}
+              {activeTab === "goals" && (
+                <div className="p-4 sm:p-6 space-y-4">
+                  {!showNewGoalForm ? (
+                    <button
+                      onClick={() => setShowNewGoalForm(true)}
+                      className="w-full p-4 rounded-xl border-2 border-dashed border-gray-200 
+                        hover:border-blue-500 hover:bg-blue-50 transition-colors touch-none
+                        flex items-center justify-center gap-2"
+                    >
+                      <PlusIcon className="w-5 h-5 text-gray-500" />
+                      <span className="text-gray-600">Add New Goal</span>
+                    </button>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm space-y-4"
+                    >
+                      <input
+                        type="text"
+                        value={newGoal.title}
+                        onChange={(e) =>
+                          setNewGoal({ ...newGoal, title: e.target.value })
+                        }
+                        placeholder="What's your goal?"
+                        className="w-full p-3 rounded-xl border-0 bg-gray-50
+                          focus:ring-2 focus:ring-blue-500 text-gray-900"
                       />
-                      <button
-                        onClick={addNote}
-                        disabled={!newNote.trim()}
-                        className="absolute bottom-4 right-4 p-2 rounded-lg bg-blue-600 text-white 
-                                 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <PlusIcon className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    {/* Notes grid */}
-                    <div className="grid grid-cols-1 gap-4">
-                      {notes.map((note) => (
-                        <motion.div
-                          key={note.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`relative p-4 rounded-xl border ${note.color} transform rotate-[-0.5deg]`}
+                      <div className="grid grid-cols-2 gap-4">
+                        <select
+                          value={newGoal.category}
+                          onChange={(e) =>
+                            setNewGoal({
+                              ...newGoal,
+                              category: e.target.value as Goal["category"],
+                            })
+                          }
+                          className="p-3 rounded-xl border-0 bg-gray-50 text-gray-900"
                         >
-                          <p className="text-gray-800 whitespace-pre-wrap">
-                            {note.content}
-                          </p>
-                          <span className="block mt-2 text-xs text-gray-500">
-                            {format(new Date(note.createdAt), "MMM d, yyyy")}
-                          </span>
-                          <button
-                            onClick={() => deleteNote(note.id)}
-                            className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-200/50"
-                          >
-                            <XMarkIcon className="w-4 h-4 text-gray-500" />
-                          </button>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "goals" && (
-                  <div className="space-y-6">
-                    {/* Add new goal button */}
-                    {!showNewGoalForm ? (
-                      <button
-                        onClick={() => setShowNewGoalForm(true)}
-                        className="w-full p-4 rounded-xl border-2 border-dashed border-gray-200 
-                                 hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <PlusIcon className="w-5 h-5 text-gray-500" />
-                        <span className="text-gray-600">Add New Goal</span>
-                      </button>
-                    ) : (
-                      <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm space-y-4"
-                      >
+                          <option value="personal">Personal</option>
+                          <option value="work">Work</option>
+                          <option value="health">Health</option>
+                          <option value="learning">Learning</option>
+                        </select>
                         <input
-                          type="text"
-                          value={newGoal}
-                          onChange={(e) => setNewGoal(e.target.value)}
-                          placeholder="What's your goal?"
-                          className="w-full p-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          type="date"
+                          value={
+                            newGoal.dueDate
+                              ? format(new Date(newGoal.dueDate), "yyyy-MM-dd")
+                              : ""
+                          }
+                          onChange={(e) =>
+                            setNewGoal({
+                              ...newGoal,
+                              dueDate: e.target.value
+                                ? new Date(e.target.value)
+                                : undefined,
+                            })
+                          }
+                          className="p-3 rounded-xl border-0 bg-gray-50 text-gray-900"
+                          placeholder="Due Date (Optional)"
                         />
-                        <div className="flex gap-2">
-                          {(
-                            ["personal", "work", "health", "learning"] as const
-                          ).map((category) => (
-                            <button
-                              key={category}
-                              onClick={() => setNewGoalCategory(category)}
-                              className={`px-3 py-1 rounded-full text-xs font-medium capitalize
-                                ${
-                                  newGoalCategory === category
-                                    ? category === "personal"
-                                      ? "bg-purple-100 text-purple-800"
-                                      : category === "work"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : category === "health"
-                                      ? "bg-green-100 text-green-800"
-                                      : "bg-yellow-100 text-yellow-800"
-                                    : "bg-gray-100 text-gray-600"
-                                }`}
-                            >
-                              {category}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => setShowNewGoalForm(false)}
-                            className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={addGoal}
-                            disabled={!newGoal.trim()}
-                            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg
-                                     hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Add Goal
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => setShowNewGoalForm(false)}
+                          className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100
+                            rounded-lg transition-colors touch-none"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={addGoal}
+                          disabled={!newGoal.title?.trim()}
+                          className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg
+                            hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed
+                            transition-colors touch-none"
+                        >
+                          Add Goal
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
 
+                  {/* Goals List */}
+                  <div className="space-y-3">
                     {goals.map((goal) => (
                       <motion.div
                         key={goal.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm"
+                        className="group p-4 bg-white rounded-xl border border-gray-100
+                          hover:border-gray-200 transition-colors"
                       >
-                        <div className="flex items-start justify-between mb-3">
-                          <h4 className="font-medium text-gray-900">
-                            {goal.title}
-                          </h4>
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full
-                            ${
-                              goal.category === "personal"
-                                ? "bg-purple-100 text-purple-800"
-                                : goal.category === "work"
-                                ? "bg-blue-100 text-blue-800"
-                                : goal.category === "health"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}
-                          >
-                            {goal.category}
-                          </span>
-                        </div>
-
-                        <div className="relative pt-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <span className="text-xs font-semibold inline-block text-blue-600">
-                                {goal.progress}%
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center">
-                            <div className="flex-1 mr-4">
-                              <div className="h-2 bg-gray-200 rounded-full">
-                                <motion.div
-                                  className="h-2 bg-blue-600 rounded-full"
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${goal.progress}%` }}
-                                  transition={{ duration: 0.5 }}
-                                />
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-gray-900">
+                                {goal.title}
+                              </h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span
+                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                  ${
+                                    goal.category === "personal"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : goal.category === "work"
+                                      ? "bg-purple-100 text-purple-800"
+                                      : goal.category === "health"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-amber-100 text-amber-800"
+                                  }`}
+                                >
+                                  {goal.category}
+                                </span>
+                                {goal.dueDate && (
+                                  <span className="text-sm text-gray-500">
+                                    Due{" "}
+                                    {format(
+                                      new Date(goal.dueDate),
+                                      "MMM d, yyyy"
+                                    )}
+                                  </span>
+                                )}
                               </div>
                             </div>
-                            <div className="flex gap-1">
-                              <button
-                                onClick={() =>
-                                  updateGoalProgress(
-                                    goal.id,
-                                    goal.progress - 10
-                                  )
-                                }
-                                className="p-1 rounded-lg hover:bg-gray-100"
-                              >
-                                -
-                              </button>
-                              <button
-                                onClick={() =>
-                                  updateGoalProgress(
-                                    goal.id,
-                                    goal.progress + 10
-                                  )
-                                }
-                                className="p-1 rounded-lg hover:bg-gray-100"
-                              >
-                                +
-                              </button>
+                            <button
+                              onClick={() => deleteGoal(goal.id)}
+                              className="p-2 -m-2 text-gray-400 hover:text-red-500
+                                transition-colors touch-none sm:opacity-0 sm:group-hover:opacity-100"
+                            >
+                              <TrashIcon className="w-5 h-5" />
+                            </button>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm text-gray-500">
+                              <span>Progress</span>
+                              <span>{goal.progress}%</span>
                             </div>
+                            <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className={`absolute inset-y-0 left-0 transition-all duration-300
+                                  ${
+                                    goal.category === "personal"
+                                      ? "bg-blue-500"
+                                      : goal.category === "work"
+                                      ? "bg-purple-500"
+                                      : goal.category === "health"
+                                      ? "bg-green-500"
+                                      : "bg-amber-500"
+                                  }`}
+                                style={{ width: `${goal.progress}%` }}
+                              />
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={goal.progress}
+                              onChange={(e) =>
+                                updateGoalProgress(
+                                  goal.id,
+                                  parseInt(e.target.value)
+                                )
+                              }
+                              className="w-full h-2 appearance-none bg-transparent cursor-pointer"
+                            />
                           </div>
                         </div>
                       </motion.div>
                     ))}
                   </div>
-                )}
+                </div>
+              )}
 
-                {activeTab === "upcoming" && renderLifeEventsTab()}
-              </div>
+              {/* Notes Tab */}
+              {activeTab === "notes" && (
+                <div className="p-4 sm:p-6 space-y-4">
+                  <div className="relative">
+                    <textarea
+                      value={newNote}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      placeholder="Write a note..."
+                      className="w-full p-4 rounded-xl border-0 bg-gray-50
+                        focus:ring-2 focus:ring-blue-500 text-gray-900
+                        resize-none min-h-[120px]"
+                    />
+                    <button
+                      onClick={addNote}
+                      disabled={!newNote.trim()}
+                      className="absolute bottom-4 right-4 p-2 rounded-lg bg-blue-600 text-white
+                        hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed
+                        transition-colors touch-none"
+                    >
+                      <PlusIcon className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {notes.map((note) => (
+                      <motion.div
+                        key={note.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="group p-4 bg-white rounded-xl border border-gray-100
+                          hover:border-gray-200 transition-colors"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="flex-1">
+                            <p className="text-gray-900 whitespace-pre-wrap">
+                              {note.content}
+                            </p>
+                            <span className="block mt-2 text-xs text-gray-500">
+                              {format(new Date(note.createdAt), "MMM d, yyyy")}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => deleteNote(note.id)}
+                            className="p-2 -m-2 text-gray-400 hover:text-red-500
+                              transition-colors touch-none sm:opacity-0 sm:group-hover:opacity-100"
+                          >
+                            <TrashIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         </>

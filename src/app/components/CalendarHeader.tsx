@@ -35,51 +35,37 @@ export default function CalendarHeader({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="bg-white border-b border-gray-200 py-2 px-3 md:py-4 md:px-6">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 md:gap-4">
-            <h1 className="text-lg md:text-xl font-semibold text-gray-900">
-              Calendar
-            </h1>
-            <span className="text-base md:text-lg font-medium text-gray-600">
-              {format(
-                currentDate,
-                currentView === "year"
-                  ? "yyyy"
-                  : currentView === "month"
-                  ? "MMMM yyyy"
-                  : isMobile
-                  ? "MMM yyyy"
-                  : "MMMM yyyy"
-              )}
-            </span>
-          </div>
+    <header className="bg-white border-b border-gray-100">
+      <div className="px-4 py-3 sm:px-6 sm:py-4">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+            {format(currentDate, "MMMM yyyy")}
+          </h1>
 
           {isMobile ? (
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-1.5 rounded-lg hover:bg-gray-100"
+              className="p-2 -m-2 text-gray-400 hover:text-gray-500 transition-colors touch-none"
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMobileMenuOpen ? (
-                <XMarkIcon className="w-6 h-6 text-gray-600" />
+                <XMarkIcon className="w-6 h-6" />
               ) : (
-                <Bars3Icon className="w-6 h-6 text-gray-600" />
+                <Bars3Icon className="w-6 h-6" />
               )}
             </motion.button>
           ) : (
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="flex rounded-lg border border-gray-200 p-0.5">
+            <div className="flex items-center gap-3">
+              <div className="flex rounded-xl border border-gray-200 p-0.5">
                 {["week", "month", "year"].map((view) => (
                   <motion.button
                     key={view}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() =>
                       onViewChange(view as "week" | "month" | "year")
                     }
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                       currentView === view
                         ? "bg-gray-900 text-white"
                         : "text-gray-600 hover:text-gray-900"
@@ -92,57 +78,60 @@ export default function CalendarHeader({
 
               {onAddNote && (
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={onAddNote}
-                  className="inline-flex items-center justify-center gap-2 px-3 py-1.5 md:py-2 
-                          text-sm font-medium text-yellow-700 bg-yellow-50 rounded-lg 
-                          hover:bg-yellow-100 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium 
+                    text-yellow-700 bg-yellow-50 rounded-lg hover:bg-yellow-100 
+                    transition-colors touch-none"
                 >
-                  <LightBulbIcon className="w-4 h-4" />
+                  <LightBulbIcon className="w-5 h-5" />
                   <span>Add Note</span>
                 </motion.button>
               )}
+
               <motion.button
-                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onInsightsClick}
-                className="inline-flex items-center justify-center gap-2 px-3 py-1.5 md:py-2 
-                        text-sm font-medium text-blue-700 bg-blue-50 rounded-lg 
-                        hover:bg-blue-100 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium 
+                  text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 
+                  transition-colors touch-none"
               >
-                <CalendarDaysIcon className="w-4 h-4" />
+                <ChartBarIcon className="w-5 h-5" />
                 <span>Insights</span>
               </motion.button>
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 md:gap-2">
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-2">
             <motion.button
-              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onWeekChange(subWeeks(currentDate, 1))}
-              className="p-1.5 rounded-lg hover:bg-gray-100"
+              className="p-2 -m-2 text-gray-400 hover:text-gray-500 
+                transition-colors touch-none rounded-full"
+              aria-label="Previous week"
             >
-              <ChevronLeftIcon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
+              <ChevronLeftIcon className="w-5 h-5" />
             </motion.button>
+
             <motion.button
-              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onWeekChange(new Date())}
-              className="px-2.5 py-1 md:px-3 md:py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg"
+              className="px-3 py-1 text-sm font-medium text-gray-600 
+                hover:bg-gray-100 rounded-lg transition-colors touch-none"
             >
               Today
             </motion.button>
+
             <motion.button
-              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onWeekChange(addWeeks(currentDate, 1))}
-              className="p-1.5 rounded-lg hover:bg-gray-100"
+              className="p-2 -m-2 text-gray-400 hover:text-gray-500 
+                transition-colors touch-none rounded-full"
+              aria-label="Next week"
             >
-              <ChevronRightIcon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
+              <ChevronRightIcon className="w-5 h-5" />
             </motion.button>
           </div>
 
@@ -151,14 +140,19 @@ export default function CalendarHeader({
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={onAddNote}
-                className="p-1.5 rounded-lg hover:bg-yellow-50 text-yellow-700"
+                className="p-2 -m-2 text-yellow-600 hover:text-yellow-700 
+                  transition-colors touch-none rounded-full"
+                aria-label="Add note"
               >
                 <LightBulbIcon className="w-5 h-5" />
               </motion.button>
+
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={onInsightsClick}
-                className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-700"
+                className="p-2 -m-2 text-blue-600 hover:text-blue-700 
+                  transition-colors touch-none rounded-full"
+                aria-label="View insights"
               >
                 <ChartBarIcon className="w-5 h-5" />
               </motion.button>
@@ -173,28 +167,26 @@ export default function CalendarHeader({
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden"
+              className="mt-4 pb-2 overflow-hidden"
             >
-              <div className="py-2 space-y-2">
-                <div className="flex rounded-lg border border-gray-200 p-0.5">
-                  {["week", "month", "year"].map((view) => (
-                    <motion.button
-                      key={view}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        onViewChange(view as "week" | "month" | "year");
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                        currentView === view
-                          ? "bg-gray-900 text-white"
-                          : "text-gray-600 hover:text-gray-900"
-                      }`}
-                    >
-                      {view.charAt(0).toUpperCase() + view.slice(1)}
-                    </motion.button>
-                  ))}
-                </div>
+              <div className="flex rounded-xl border border-gray-200 p-0.5">
+                {["week", "month", "year"].map((view) => (
+                  <motion.button
+                    key={view}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      onViewChange(view as "week" | "month" | "year");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                      currentView === view
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    {view.charAt(0).toUpperCase() + view.slice(1)}
+                  </motion.button>
+                ))}
               </div>
             </motion.div>
           )}
