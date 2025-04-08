@@ -9,6 +9,7 @@ import EventForm from "./components/EventForm";
 import EventDetail from "./components/EventDetail";
 import SidePanel from "./components/SidePanel";
 import YearProgressBar from "./components/YearProgressBar";
+import MobileDatePicker from "./components/MobileDatePicker";
 import { Event } from "./types/Event";
 import { LifeEvent } from "./types";
 import { CalendarNote } from "./components/CalendarNote";
@@ -207,7 +208,7 @@ export default function Home() {
   }
 
   return (
-    <main className="flex flex-col h-screen bg-gray-50">
+    <main className="flex flex-col h-screen bg-gray-50 overflow-hidden">
       <CalendarHeader
         currentDate={currentDate}
         onWeekChange={handleWeekChange}
@@ -215,7 +216,11 @@ export default function Home() {
         onInsightsClick={() => setIsSidePanelOpen(true)}
         onAddNote={handleQuickAddNote}
       />
-      <div className="flex-1 overflow-hidden">
+      <MobileDatePicker
+        currentDate={currentDate}
+        onDateChange={setCurrentDate}
+      />
+      <div className="flex-1 overflow-y-auto">
         <CalendarGrid
           currentDate={currentDate}
           isMobile={isMobile}
