@@ -119,8 +119,19 @@ export default function Home() {
     setIsModalOpen(true);
   };
 
+  // Add handler for deleting life events
+  const handleDeleteLifeEvent = (eventId: string) => {
+    setLifeEvents((prev) => prev.filter((event) => event.id !== eventId));
+  };
+
   const handleDeleteEvent = (eventId: string) => {
-    setEvents(events.filter((event) => event.id !== eventId));
+    // Check if it's a life event first
+    const lifeEvent = lifeEvents.find((event) => event.id === eventId);
+    if (lifeEvent) {
+      handleDeleteLifeEvent(eventId);
+    } else {
+      setEvents(events.filter((event) => event.id !== eventId));
+    }
   };
 
   const handleEventSubmit = (eventData: Omit<Event, "id">) => {
@@ -248,6 +259,7 @@ export default function Home() {
             currentDate={currentDate}
             events={allEvents}
             notes={notes}
+            isMobile={isMobile}
             onAddEvent={handleAddEvent}
             onEditEvent={handleEditEvent}
             onDeleteEvent={handleDeleteEvent}
@@ -261,10 +273,8 @@ export default function Home() {
             currentDate={currentDate}
             events={allEvents}
             notes={notes}
-            onMonthClick={(date) => {
-              setCurrentDate(date);
-              setCurrentView("month");
-            }}
+            isMobile={isMobile}
+            onMonthClick={handleWeekChange}
           />
         )}
       </div>
@@ -319,6 +329,8 @@ export default function Home() {
         isOpen={isSidePanelOpen}
         onClose={() => setIsSidePanelOpen(false)}
         onAddLifeEvent={handleAddLifeEvent}
+        lifeEvents={lifeEvents}
+        onDeleteLifeEvent={handleDeleteLifeEvent}
       />
     </main>
   );

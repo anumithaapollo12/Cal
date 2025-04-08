@@ -6,6 +6,8 @@ import EventCard from "./EventCard";
 import useLongPress from "../hooks/useLongPress";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { format } from "date-fns";
+import { motion } from "framer-motion";
+import { ClockIcon } from "@heroicons/react/24/outline";
 
 interface EventCardWrapperProps {
   event: Event;
@@ -185,41 +187,50 @@ export default function EventCardWrapper({
       className="touch-none select-none"
     >
       <div
-        className={`group relative rounded-lg border ${
-          event.color || "bg-white"
-        } ${isCompact ? "p-1" : "p-3"} hover:shadow-md transition-shadow`}
+        className={`group relative rounded-2xl border backdrop-blur-sm ${
+          event.color || "bg-white/90 border-gray-200/50"
+        } ${
+          isCompact ? "p-1.5" : "p-4"
+        } hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5`}
       >
         {!isCompact && (
-          <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
+          <div className="absolute right-2 top-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(event);
               }}
-              className="p-1 rounded hover:bg-gray-100"
+              className="p-1.5 rounded-xl hover:bg-gray-100/80 border border-gray-200/50"
             >
-              <PencilIcon className="w-4 h-4 text-gray-500" />
-            </button>
-            <button
+              <PencilIcon className="w-3.5 h-3.5 text-gray-600" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(event.id);
               }}
-              className="p-1 rounded hover:bg-gray-100"
+              className="p-1.5 rounded-xl hover:bg-red-50/80 border border-red-100/50"
             >
-              <TrashIcon className="w-4 h-4 text-gray-500" />
-            </button>
+              <TrashIcon className="w-3.5 h-3.5 text-red-500" />
+            </motion.button>
           </div>
         )}
         <div className={isCompact ? "text-xs truncate" : ""}>
           {!isCompact && (
-            <div className="text-xs text-gray-500 mb-1">
+            <div className="text-xs font-medium text-gray-500 mb-1.5 flex items-center">
+              <ClockIcon className="w-3.5 h-3.5 mr-1" />
               {format(new Date(event.startTime), "h:mm a")}
             </div>
           )}
-          <div className="font-medium text-gray-900">{event.title}</div>
+          <div className="font-medium text-gray-900 group-hover:text-gray-700 transition-colors">
+            {event.title}
+          </div>
           {!isCompact && event.description && (
-            <div className="text-sm text-gray-500 mt-1 line-clamp-2">
+            <div className="text-sm text-gray-500 mt-1.5 line-clamp-2 group-hover:text-gray-600 transition-colors">
               {event.description}
             </div>
           )}

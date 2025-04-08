@@ -1,7 +1,11 @@
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { Event } from "../types/Event";
-import { TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
+import {
+  TrashIcon,
+  PencilIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
 import Image from "next/image";
 
 interface EventCardProps {
@@ -21,6 +25,30 @@ export default function EventCard({
   onDelete,
   onOpenDetail,
 }: EventCardProps) {
+  // Helper function to get event type icon
+  const getEventIcon = () => {
+    if (!event.isLifeEvent) return null;
+    return <SparklesIcon className="w-4 h-4 text-amber-500" />;
+  };
+
+  // Helper function to get event type color
+  const getEventTypeColor = () => {
+    if (!event.isLifeEvent) return event.color || "var(--color-primary)";
+
+    switch (event.type) {
+      case "birthday":
+        return "rgb(244, 114, 182)"; // pink-400
+      case "anniversary":
+        return "rgb(168, 85, 247)"; // purple-500
+      case "holiday":
+        return "rgb(59, 130, 246)"; // blue-500
+      case "special":
+        return "rgb(245, 158, 11)"; // amber-500
+      default:
+        return event.color || "var(--color-primary)";
+    }
+  };
+
   return (
     <motion.div
       className={`group relative card-premium overflow-hidden touch-none select-none
@@ -29,6 +57,11 @@ export default function EventCard({
           isDragging || isDragEnabled
             ? "cursor-grabbing shadow-2xl"
             : "cursor-pointer hover:shadow-lg"
+        }
+        ${
+          event.isLifeEvent
+            ? "border border-amber-200/50 bg-gradient-to-br from-amber-50/80 to-white/90"
+            : ""
         }`}
       initial={false}
       animate={{
@@ -60,22 +93,28 @@ export default function EventCard({
 
       {/* Content Area */}
       <div className="relative z-10">
-        {/* Time Badge */}
+        {/* Time Badge with Event Type Icon */}
         <motion.div
-          className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-[var(--color-gray-100)] 
-             text-xs font-medium text-[var(--color-gray-500)] tracking-wide
-             group-hover:bg-[var(--color-gray-200)] transition-all duration-300"
+          className={`absolute top-4 right-4 px-2.5 py-1 rounded-full 
+             text-xs font-medium tracking-wide flex items-center gap-1.5
+             ${
+               event.isLifeEvent
+                 ? "bg-amber-100/80 text-amber-800"
+                 : "bg-[var(--color-gray-100)] text-[var(--color-gray-500)]"
+             }
+             group-hover:bg-opacity-90 transition-all duration-300`}
           animate={{
             scale: isDragging ? 1.05 : 1,
           }}
         >
+          {getEventIcon()}
           {format(new Date(event.startTime), "h:mm a")}
         </motion.div>
 
         {/* Color Tag */}
         <motion.div
           className="absolute top-0 left-0 w-1 h-full"
-          style={{ backgroundColor: event.color || "var(--color-primary)" }}
+          style={{ backgroundColor: getEventTypeColor() }}
           animate={{
             opacity: isDragging ? 1 : 0.9,
             height: isDragging ? "100%" : "100%",
@@ -106,85 +145,78 @@ export default function EventCard({
           </motion.div>
         )}
 
-        <motion.div
-          className="p-5"
-          animate={{
-            scale: isDragging ? 1.02 : 1,
-          }}
+        {/* Main Content Area */}
+        <div
+          className={`p-4 pl-6 flex flex-col gap-2 ${
+            event.isLifeEvent ? "pt-3" : ""
+          }`}
+          onClick={() => onOpenDetail?.(event)}
         >
-          <div className="flex flex-col gap-3">
-            <div className="space-y-1.5">
-              <motion.h2
-                className="text-base font-semibold text-[var(--color-gray-900)] 
-                         group-hover:text-[var(--color-primary)] transition-colors duration-300"
-                animate={{
-                  scale: isDragging ? 1.02 : 1,
-                }}
-              >
-                {event.title}
-              </motion.h2>
-              {event.description && (
-                <motion.div
-                  className="text-sm text-[var(--color-gray-500)] line-clamp-2
-                          group-hover:text-[var(--color-gray-900)] transition-colors duration-300"
-                  animate={{
-                    opacity: isDragging ? 0.9 : 1,
-                  }}
-                >
-                  {event.description}
-                </motion.div>
-              )}
-            </div>
+          {/* Event Type Badge for Life Events */}
+          {event.isLifeEvent && (
+            <span className="text-xs font-medium text-amber-600 capitalize flex items-center gap-1">
+              {event.type}
+            </span>
+          )}
 
-            {/* Action Buttons */}
-            {onEdit && onDelete && (
-              <motion.div
-                className="flex items-center gap-2 pt-1 opacity-0 translate-y-1
-                          group-hover:opacity-100 group-hover:translate-y-0 
-                          transition-all duration-300 ease-out"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{
-                  opacity: isDragging ? 0 : 1,
-                  y: isDragging ? 8 : 0,
+          {/* Title */}
+          <h3
+            className={`font-semibold text-[var(--color-gray-900)] line-clamp-2
+            ${event.isLifeEvent ? "text-lg" : ""}`}
+          >
+            {event.title}
+          </h3>
+
+          {/* Description */}
+          {event.description && (
+            <p className="text-sm text-[var(--color-gray-500)] line-clamp-2">
+              {event.description}
+            </p>
+          )}
+
+          {/* Image */}
+          {event.image && (
+            <div className="relative w-full h-32 mt-2 rounded-lg overflow-hidden">
+              <Image
+                src={event.image}
+                alt={event.title}
+                fill
+                className="object-cover"
+              />
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onEdit && !event.isLifeEvent && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(event);
                 }}
+                className="p-1.5 rounded-full hover:bg-[var(--color-gray-100)] text-[var(--color-gray-500)]"
               >
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="edit-button p-2 rounded-xl bg-[var(--color-gray-100)]
-                           hover:bg-[var(--color-gray-200)] active:bg-[var(--color-gray-300)]
-                           transition-all duration-300"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onEdit?.(event);
-                  }}
-                >
-                  <PencilIcon
-                    className="w-4 h-4 text-[var(--color-gray-500)]
-                               group-hover:text-[var(--color-primary)] transition-colors duration-300"
-                  />
-                </motion.button>
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="delete-button p-2 rounded-xl bg-red-50
-                           hover:bg-red-100 active:bg-red-200
-                           transition-all duration-300"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onDelete?.(event.id);
-                  }}
-                >
-                  <TrashIcon className="w-4 h-4 text-red-500" />
-                </motion.button>
-              </motion.div>
+                <PencilIcon className="w-4 h-4" />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(event.id);
+                }}
+                className={`p-1.5 rounded-full 
+                  ${
+                    event.isLifeEvent
+                      ? "hover:bg-amber-100 text-amber-700"
+                      : "hover:bg-[var(--color-gray-100)] text-[var(--color-gray-500)]"
+                  }`}
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
             )}
           </div>
-        </motion.div>
+        </div>
 
         {/* Drag Indicator */}
         <motion.div

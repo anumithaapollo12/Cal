@@ -21,6 +21,7 @@ import {
   CakeIcon,
   GiftIcon,
   StarIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import EventDetail from "./EventDetail";
 
@@ -28,6 +29,8 @@ interface SidePanelProps {
   isOpen: boolean;
   onClose: () => void;
   onAddLifeEvent?: (event: LifeEvent) => void;
+  lifeEvents: LifeEvent[];
+  onDeleteLifeEvent: (eventId: string) => void;
 }
 
 interface Note {
@@ -69,6 +72,8 @@ export default function SidePanel({
   isOpen,
   onClose,
   onAddLifeEvent,
+  lifeEvents,
+  onDeleteLifeEvent,
 }: SidePanelProps) {
   const [activeTab, setActiveTab] = useState<"upcoming" | "goals" | "notes">(
     "upcoming"
@@ -102,16 +107,6 @@ export default function SidePanel({
     useState<Goal["category"]>("personal");
   const [showNewGoalForm, setShowNewGoalForm] = useState(false);
 
-  const [lifeEvents, setLifeEvents] = useState<LifeEvent[]>(() => {
-    const saved = localStorage.getItem("calendar-life-events");
-    return saved
-      ? JSON.parse(saved).map((event: any) => ({
-          ...event,
-          date: new Date(event.date),
-        }))
-      : [];
-  });
-
   const [showNewEventForm, setShowNewEventForm] = useState(false);
   const [newEvent, setNewEvent] = useState<Partial<LifeEvent>>({
     type: "birthday",
@@ -130,11 +125,6 @@ export default function SidePanel({
   useEffect(() => {
     localStorage.setItem("calendar-goals", JSON.stringify(goals));
   }, [goals]);
-
-  // Save life events to localStorage when they change
-  useEffect(() => {
-    localStorage.setItem("calendar-life-events", JSON.stringify(lifeEvents));
-  }, [lifeEvents]);
 
   const addNote = () => {
     if (!newNote.trim()) return;
@@ -187,7 +177,7 @@ export default function SidePanel({
   };
 
   const addLifeEvent = () => {
-    if (!newEvent.title?.trim() || !newEvent.date) return;
+    if (!newEvent.title || !newEvent.date) return;
 
     const eventColors = {
       birthday: "bg-pink-100",
@@ -207,7 +197,6 @@ export default function SidePanel({
       repeatsAnnually: newEvent.repeatsAnnually,
     };
 
-    setLifeEvents([...lifeEvents, newEventObj]);
     onAddLifeEvent?.(newEventObj);
     setShowNewEventForm(false);
     setNewEvent({
@@ -215,10 +204,6 @@ export default function SidePanel({
       repeatsAnnually: true,
       icon: "cake",
     });
-  };
-
-  const deleteLifeEvent = (id: string) => {
-    setLifeEvents(lifeEvents.filter((event) => event.id !== id));
   };
 
   const getUpcomingEvents = () => {
@@ -354,6 +339,15 @@ export default function SidePanel({
                       )}
                     </div>
                   </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteLifeEvent(event.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-full hover:bg-red-100 text-red-500 transition-opacity"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ))}
