@@ -272,6 +272,7 @@ export default function Home() {
             onOpenDetail={handleOpenDetail}
             onUpdateNote={handleUpdateNote}
             onDeleteNote={handleDeleteNote}
+            onMonthChange={setCurrentDate}
           />
         )}
         {currentView === "year" && (

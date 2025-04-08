@@ -97,7 +97,7 @@ export default function CalendarHeader({
                   transition-colors touch-none"
               >
                 <ChartBarIcon className="w-5 h-5" />
-                <span>Insights</span>
+                <span>My Time</span>
               </motion.button>
             </div>
           )}
@@ -152,7 +152,7 @@ export default function CalendarHeader({
                 onClick={onInsightsClick}
                 className="p-2 -m-2 text-blue-600 hover:text-blue-700 
                   transition-colors touch-none rounded-full"
-                aria-label="View insights"
+                aria-label="View my time"
               >
                 <ChartBarIcon className="w-5 h-5" />
               </motion.button>

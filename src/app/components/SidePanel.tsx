@@ -782,7 +782,9 @@ export default function SidePanel({
                       placeholder="Write a note..."
                       className="w-full p-4 rounded-xl border-0 bg-gray-50
                         focus:ring-2 focus:ring-blue-500 text-gray-900
-                        resize-none min-h-[120px] touch-none"
+                        resize-none min-h-[120px] touch-pan-y"
+                      onTouchStart={(e) => e.stopPropagation()}
+                      onTouchMove={(e) => e.stopPropagation()}
                     />
                     <button
                       onClick={addNote}
@@ -802,7 +804,7 @@ export default function SidePanel({
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="group p-4 bg-white rounded-xl border border-gray-100
-                          hover:border-gray-200 transition-colors touch-none"
+                          hover:border-gray-200 transition-colors touch-none select-none"
                       >
                         <div className="flex items-start gap-4">
                           <div className="flex-1">

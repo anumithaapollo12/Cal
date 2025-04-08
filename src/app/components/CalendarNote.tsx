@@ -49,9 +49,11 @@ export default function CalendarNote({
     }
   }, [isEditing]);
 
-  const startEditing = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const startEditing = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setIsEditing(true);
   };
 
@@ -82,9 +84,8 @@ export default function CalendarNote({
   return (
     <div
       className={`group relative p-3 rounded-lg border shadow-sm md:max-w-[200px] w-full
-        ${note.color} hover:shadow-md transition-all duration-200`}
+        ${note.color} hover:shadow-md transition-all duration-200 touch-none select-none`}
       onDoubleClick={startEditing}
-      onTouchEnd={startEditing}
     >
       {isEditing ? (
         <textarea
@@ -93,29 +94,37 @@ export default function CalendarNote({
           onChange={(e) => setContent(e.target.value)}
           onBlur={saveNote}
           onKeyDown={handleKeyDown}
-          onTouchStart={handleTextareaTouchStart}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+            startEditing();
+          }}
           className="w-full bg-transparent resize-none focus:outline-none
-                   text-sm text-gray-700 min-h-[60px]"
+                   text-sm text-gray-700 min-h-[60px] touch-pan-y"
           placeholder="Write your note..."
           autoFocus
         />
       ) : (
-        <p className="text-sm whitespace-pre-wrap text-gray-700 min-h-[60px]">
+        <div
+          className="text-sm whitespace-pre-wrap text-gray-700 min-h-[60px]"
+          onTouchStart={(e) => {
+            e.stopPropagation();
+            startEditing();
+          }}
+        >
           {content || "Tap to add note"}
-        </p>
+        </div>
       )}
 
       <button
         onClick={handleDelete}
-        onTouchEnd={handleDelete}
         className="absolute top-2 right-2 p-1 rounded-full bg-white/80 hover:bg-white
                  text-gray-500 hover:text-red-500 shadow-sm opacity-0 group-hover:opacity-100
-                 transition-opacity duration-200"
+                 transition-opacity duration-200 touch-none"
       >
         <XMarkIcon className="w-4 h-4" />
       </button>
 
-      <div className="mt-2 text-[10px] text-gray-500">
+      <div className="mt-2 text-[10px] text-gray-500 select-none">
         {format(note.createdAt, "MMM d, h:mm a")}
       </div>
     </div>

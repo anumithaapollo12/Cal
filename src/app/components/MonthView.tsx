@@ -8,10 +8,13 @@ import {
   isSameDay,
   startOfWeek,
   endOfWeek,
+  addMonths,
+  subMonths,
 } from "date-fns";
 import { Event } from "../types/Event";
 import { CalendarNote } from "./CalendarNote";
 import EventCardWrapper from "./EventCardWrapper";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 
 interface MonthViewProps {
   currentDate: Date;
@@ -27,6 +30,7 @@ interface MonthViewProps {
   onUpdateNote: (note: CalendarNote) => void;
   onDeleteNote: (noteId: string) => void;
   isMobile: boolean;
+  onMonthChange: (date: Date) => void;
 }
 
 export default function MonthView({
@@ -40,6 +44,7 @@ export default function MonthView({
   onUpdateNote,
   onDeleteNote,
   isMobile,
+  onMonthChange,
 }: MonthViewProps) {
   // Get all days in the month, including padding days for complete weeks
   const monthStart = startOfMonth(currentDate);
@@ -60,6 +65,33 @@ export default function MonthView({
 
   return (
     <div className="flex-1 overflow-hidden bg-white">
+      {/* Month Navigation */}
+      <div className="hidden md:flex items-center justify-between p-4 border-b border-gray-200">
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => onMonthChange(subMonths(currentDate, 1))}
+          className="p-2 -m-2 text-gray-400 hover:text-gray-500 
+            transition-colors touch-none rounded-full"
+          aria-label="Previous month"
+        >
+          <ChevronLeftIcon className="w-5 h-5" />
+        </motion.button>
+
+        <h2 className="text-lg font-semibold text-gray-900">
+          {format(currentDate, "MMMM yyyy")}
+        </h2>
+
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => onMonthChange(addMonths(currentDate, 1))}
+          className="p-2 -m-2 text-gray-400 hover:text-gray-500 
+            transition-colors touch-none rounded-full"
+          aria-label="Next month"
+        >
+          <ChevronRightIcon className="w-5 h-5" />
+        </motion.button>
+      </div>
+
       <div className="grid grid-cols-7 text-sm leading-6 text-gray-500 border-b border-gray-200 sticky top-0 bg-white z-10">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div key={day} className="font-medium text-center py-2">
