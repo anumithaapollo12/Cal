@@ -3,13 +3,17 @@
 import { useState, useEffect } from "react";
 import { Event } from "../types/Event";
 import { CalendarNote } from "../components/CalendarNote";
+import { LifeEvent, Goal } from "../types";
 
-type StorageKey = "events" | "notes";
+type StorageKey =
+  | "calendar-events"
+  | "calendar-notes"
+  | "calendar-life-events"
+  | "calendar-goals";
 
-export function useLocalStorage<T extends Event[] | CalendarNote[]>(
-  key: StorageKey,
-  initialValue: T
-) {
+export function useLocalStorage<
+  T extends Event[] | CalendarNote[] | LifeEvent[] | Goal[]
+>(key: StorageKey, initialValue: T) {
   // State to store our value
   // Pass initial state function to useState so logic is only executed once
   const [storedValue, setStoredValue] = useState<T>(initialValue);
@@ -24,18 +28,30 @@ export function useLocalStorage<T extends Event[] | CalendarNote[]>(
         const parsed = JSON.parse(item);
 
         // Handle date conversion for specific types
-        if (key === "events") {
+        if (key === "calendar-events") {
           const withDates = parsed.map((event: Event) => ({
             ...event,
             startTime: new Date(event.startTime),
             endTime: new Date(event.endTime),
           }));
           setStoredValue(withDates as T);
-        } else if (key === "notes") {
+        } else if (key === "calendar-notes") {
           const withDates = parsed.map((note: CalendarNote) => ({
             ...note,
             date: new Date(note.date),
             createdAt: new Date(note.createdAt),
+          }));
+          setStoredValue(withDates as T);
+        } else if (key === "calendar-life-events") {
+          const withDates = parsed.map((event: LifeEvent) => ({
+            ...event,
+            date: new Date(event.date),
+          }));
+          setStoredValue(withDates as T);
+        } else if (key === "calendar-goals") {
+          const withDates = parsed.map((goal: Goal) => ({
+            ...goal,
+            dueDate: goal.dueDate ? new Date(goal.dueDate) : undefined,
           }));
           setStoredValue(withDates as T);
         }

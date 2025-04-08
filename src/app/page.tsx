@@ -11,11 +11,12 @@ import SidePanel from "./components/SidePanel";
 import YearProgressBar from "./components/YearProgressBar";
 import MobileDatePicker from "./components/MobileDatePicker";
 import { Event } from "./types/Event";
-import { LifeEvent } from "./types";
+import { LifeEvent, Goal } from "./types";
 import { CalendarNote } from "./components/CalendarNote";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import MonthView from "./components/MonthView";
 import YearView from "./components/YearView";
+import { mockEvents, mockLifeEvents, mockNotes, mockGoals } from "./mockData";
 
 // Dynamically import CalendarGrid with no SSR
 const CalendarGrid = dynamic(() => import("./components/CalendarGrid"), {
@@ -28,13 +29,22 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [currentView, setCurrentView] = useState<CalendarView>("week");
   const [isMobile, setIsMobile] = useState(false);
-  const [events, setEvents] = useLocalStorage<Event[]>("events", []);
-  const [lifeEvents, setLifeEvents] = useState<LifeEvent[]>(() => {
-    if (typeof window === "undefined") return [];
-    const saved = localStorage.getItem("calendar-life-events");
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [notes, setNotes] = useLocalStorage<CalendarNote[]>("notes", []);
+  const [events, setEvents] = useLocalStorage<Event[]>(
+    "calendar-events",
+    mockEvents
+  );
+  const [lifeEvents, setLifeEvents] = useLocalStorage<LifeEvent[]>(
+    "calendar-life-events",
+    mockLifeEvents
+  );
+  const [notes, setNotes] = useLocalStorage<CalendarNote[]>(
+    "calendar-notes",
+    mockNotes
+  );
+  const [goals, setGoals] = useLocalStorage<Goal[]>(
+    "calendar-goals",
+    mockGoals
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -52,11 +62,6 @@ export default function Home() {
   >(undefined);
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
-
-  // Save life events to localStorage when they change
-  useEffect(() => {
-    localStorage.setItem("calendar-life-events", JSON.stringify(lifeEvents));
-  }, [lifeEvents]);
 
   // Convert life events to calendar events
   const convertedLifeEvents = lifeEvents.map(

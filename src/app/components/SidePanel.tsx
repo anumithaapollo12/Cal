@@ -8,6 +8,8 @@ import {
   addYears,
   differenceInDays,
   isFuture,
+  addDays,
+  addMonths,
 } from "date-fns";
 import {
   CalendarIcon,
@@ -72,21 +74,246 @@ export default function SidePanel({
   isOpen,
   onClose,
   onAddLifeEvent,
-  lifeEvents,
+  lifeEvents: propLifeEvents,
   onDeleteLifeEvent,
 }: SidePanelProps) {
   const [activeTab, setActiveTab] = useState<"upcoming" | "goals" | "notes">(
     "upcoming"
   );
+
+  // Initialize notes with mock data
   const [notes, setNotes] = useState<Note[]>(() => {
     const saved = localStorage.getItem("calendar-notes");
-    return saved ? JSON.parse(saved) : [];
+    if (saved) return JSON.parse(saved);
+
+    // Mock notes
+    return [
+      {
+        id: "note-1",
+        content:
+          "🎯 Q2 Goals Review\n• Launch new feature\n• Team offsite planning\n• Performance reviews",
+        color: "bg-yellow-100 border-yellow-200",
+        date: new Date(),
+        createdAt: new Date(),
+        isPinned: false,
+      },
+      {
+        id: "note-2",
+        content:
+          "📚 Reading List\n• Atomic Habits\n• Deep Work\n• The Pragmatic Programmer",
+        color: "bg-blue-100 border-blue-200",
+        date: new Date(new Date().setDate(new Date().getDate() + 1)),
+        createdAt: new Date(),
+        isPinned: false,
+      },
+      {
+        id: "note-3",
+        content:
+          "💡 Project Ideas\n• AI-powered task manager\n• Personal finance tracker\n• Recipe recommender",
+        color: "bg-green-100 border-green-200",
+        date: new Date(new Date().setDate(new Date().getDate() + 2)),
+        createdAt: new Date(),
+        isPinned: false,
+      },
+    ];
   });
+
   const [newNote, setNewNote] = useState("");
+
+  // Initialize goals with mock data
   const [goals, setGoals] = useState<Goal[]>(() => {
     const saved = localStorage.getItem("calendar-goals");
-    return saved ? JSON.parse(saved) : [];
+    if (saved) return JSON.parse(saved);
+
+    // Mock goals
+    return [
+      {
+        id: "goal-1",
+        title: "Learn Spanish",
+        progress: 45,
+        category: "learning",
+        dueDate: addMonths(new Date(), 6),
+      },
+      {
+        id: "goal-2",
+        title: "Run a Marathon",
+        progress: 70,
+        category: "health",
+        dueDate: addMonths(new Date(), 3),
+      },
+      {
+        id: "goal-3",
+        title: "Launch Side Project",
+        progress: 30,
+        category: "work",
+        dueDate: addMonths(new Date(), 2),
+      },
+    ];
   });
+
+  // Initialize life events with mock data
+  const [localLifeEvents, setLocalLifeEvents] = useState<LifeEvent[]>(() => {
+    const saved = localStorage.getItem("calendar-life-events");
+    if (saved) return JSON.parse(saved);
+
+    // Mock life events
+    return [
+      {
+        id: "life-1",
+        title: "Sarah's Wedding Day 👰",
+        date: addDays(new Date(), 45),
+        type: "special",
+        note: "Beach wedding in Malibu! Don't forget to coordinate with the photographer.",
+        color: "bg-amber-100",
+        icon: "heart",
+        repeatsAnnually: false,
+      },
+      {
+        id: "life-2",
+        title: "Mom's Birthday 🎂",
+        date: addDays(new Date(), 15),
+        type: "birthday",
+        note: "Plan surprise party at her favorite restaurant. Theme: Vintage Hollywood",
+        color: "bg-pink-100",
+        icon: "cake",
+        repeatsAnnually: true,
+      },
+      {
+        id: "life-3",
+        title: "House Anniversary 🏠",
+        date: addDays(new Date(), 30),
+        type: "anniversary",
+        note: "One year in our dream home! Planning a housewarming BBQ.",
+        color: "bg-purple-100",
+        icon: "star",
+        repeatsAnnually: true,
+      },
+      {
+        id: "life-4",
+        title: "Graduation Day 🎓",
+        date: addMonths(new Date(), 2),
+        type: "special",
+        note: "Master's degree ceremony. Family flying in from Europe.",
+        color: "bg-amber-100",
+        icon: "star",
+        repeatsAnnually: false,
+      },
+      {
+        id: "life-5",
+        title: "Dad's Retirement Party 🎉",
+        date: addMonths(new Date(), 1),
+        type: "special",
+        note: "35 years of service celebration! Book the golf club venue.",
+        color: "bg-blue-100",
+        icon: "star",
+        repeatsAnnually: false,
+      },
+      {
+        id: "life-6",
+        title: "Company Anniversary 🏢",
+        date: addDays(new Date(), 20),
+        type: "anniversary",
+        note: "10 years in business! Planning a big celebration with all employees.",
+        color: "bg-indigo-100",
+        icon: "star",
+        repeatsAnnually: true,
+      },
+      {
+        id: "life-7",
+        title: "Annual Team Retreat 🏖️",
+        date: addMonths(new Date(), 3),
+        type: "special",
+        note: "Team building activities and strategy planning in Hawaii.",
+        color: "bg-teal-100",
+        icon: "star",
+        repeatsAnnually: true,
+      },
+      {
+        id: "life-8",
+        title: "Product Launch 🚀",
+        date: addDays(new Date(), 60),
+        type: "special",
+        note: "Big day! Launching our new AI-powered productivity suite.",
+        color: "bg-cyan-100",
+        icon: "star",
+        repeatsAnnually: false,
+      },
+      {
+        id: "life-9",
+        title: "Annual Performance Review 📊",
+        date: addMonths(new Date(), 6),
+        type: "special",
+        note: "Prepare presentation and gather achievements from the past year.",
+        color: "bg-rose-100",
+        icon: "star",
+        repeatsAnnually: true,
+      },
+      {
+        id: "life-10",
+        title: "Tech Conference 🎤",
+        date: addMonths(new Date(), 4),
+        type: "special",
+        note: "Speaking about AI trends and future of work. Need to prepare slides.",
+        color: "bg-violet-100",
+        icon: "star",
+        repeatsAnnually: false,
+      },
+      {
+        id: "life-11",
+        title: "Team Building Day 🎯",
+        date: addDays(new Date(), 25),
+        type: "special",
+        note: "Outdoor activities and problem-solving challenges at the park.",
+        color: "bg-emerald-100",
+        icon: "star",
+        repeatsAnnually: true,
+      },
+      {
+        id: "life-12",
+        title: "Quarterly Planning 📅",
+        date: addMonths(new Date(), 1),
+        type: "special",
+        note: "Set goals and priorities for the next quarter with the leadership team.",
+        color: "bg-orange-100",
+        icon: "star",
+        repeatsAnnually: true,
+      },
+      {
+        id: "life-13",
+        title: "Client Workshop 🎨",
+        date: addDays(new Date(), 40),
+        type: "special",
+        note: "Design thinking workshop with our biggest client. Need to prepare materials.",
+        color: "bg-fuchsia-100",
+        icon: "star",
+        repeatsAnnually: false,
+      },
+      {
+        id: "life-14",
+        title: "Annual Health Check 🏥",
+        date: addMonths(new Date(), 5),
+        type: "special",
+        note: "Comprehensive health checkup at the corporate wellness center.",
+        color: "bg-sky-100",
+        icon: "star",
+        repeatsAnnually: true,
+      },
+      {
+        id: "life-15",
+        title: "Team Hackathon 💻",
+        date: addDays(new Date(), 50),
+        type: "special",
+        note: "48-hour coding marathon to build innovative solutions.",
+        color: "bg-lime-100",
+        icon: "star",
+        repeatsAnnually: true,
+      },
+    ];
+  });
+
+  // Use local life events if no props provided
+  const lifeEvents = propLifeEvents?.length ? propLifeEvents : localLifeEvents;
+
   const [showNewGoalForm, setShowNewGoalForm] = useState(false);
   const [newGoal, setNewGoal] = useState<Partial<Goal>>({
     title: "",
@@ -112,6 +339,11 @@ export default function SidePanel({
   useEffect(() => {
     localStorage.setItem("calendar-goals", JSON.stringify(goals));
   }, [goals]);
+
+  // Save life events to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem("calendar-life-events", JSON.stringify(lifeEvents));
+  }, [lifeEvents]);
 
   const addNote = () => {
     if (!newNote.trim()) return;
@@ -190,13 +422,30 @@ export default function SidePanel({
       repeatsAnnually: newEvent.repeatsAnnually,
     };
 
-    onAddLifeEvent?.(newEventObj);
+    // Update local state
+    setLocalLifeEvents([...localLifeEvents, newEventObj]);
+
+    // Call parent's onAddLifeEvent if provided
+    if (onAddLifeEvent) {
+      onAddLifeEvent(newEventObj);
+    }
+
     setShowNewEventForm(false);
     setNewEvent({
       type: "birthday",
       repeatsAnnually: true,
       icon: "cake",
     });
+  };
+
+  const handleDeleteLifeEvent = (eventId: string) => {
+    // Update local state
+    setLocalLifeEvents(localLifeEvents.filter((event) => event.id !== eventId));
+
+    // Call parent's onDeleteLifeEvent if provided
+    if (onDeleteLifeEvent) {
+      onDeleteLifeEvent(eventId);
+    }
   };
 
   const getUpcomingEvents = () => {
@@ -335,7 +584,7 @@ export default function SidePanel({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onDeleteLifeEvent(event.id);
+                      handleDeleteLifeEvent(event.id);
                     }}
                     className="opacity-0 group-hover:opacity-100 p-1.5 rounded-full hover:bg-red-100 text-red-500 transition-opacity"
                   >

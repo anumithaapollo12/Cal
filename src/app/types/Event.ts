@@ -4,8 +4,7 @@ export interface Event {
   description?: string;
   startTime: Date;
   endTime: Date;
-  color: string;
-  type?:
+  type:
     | "event"
     | "task"
     | "appointment"
@@ -13,8 +12,10 @@ export interface Event {
     | "anniversary"
     | "holiday"
     | "special";
-  image?: string; // URL of the event image
-  imageAlt?: string; // Alt text for accessibility
-  location?: string; // Optional location of the event
-  isLifeEvent?: boolean; // Flag to identify life events
+  color?: string;
+  location?: string;
+  image?: string;
+  isLifeEvent?: boolean;
+  priority?: "low" | "medium" | "high";
+  recurring?: "daily" | "weekly" | "monthly" | "yearly";
 }

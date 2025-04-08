@@ -179,7 +179,10 @@ export default function CalendarGrid({
     const noteMap = new Map<string, ICalendarNote[]>();
 
     days.forEach(({ date }) => {
-      const dayNotes = notes.filter((note) => isSameDay(date, note.date));
+      const dayNotes = notes.filter((note) => {
+        const noteDate = new Date(note.date);
+        return isSameDay(date, noteDate);
+      });
       noteMap.set(date.toISOString(), dayNotes);
     });
 
@@ -369,17 +372,6 @@ export default function CalendarGrid({
                       whileTap={{ scale: 0.9 }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleAddNote(day.date);
-                      }}
-                      className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-yellow-100 hover:text-yellow-700"
-                    >
-                      <LightBulbIcon className="w-4 h-4" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
                         onAddEvent(day.date);
                       }}
                       className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-700"
@@ -400,6 +392,21 @@ export default function CalendarGrid({
                     transition={{ duration: 0.2 }}
                     onClick={(e) => handleDayClick(e, day.date)}
                   >
+                    {/* Quick Add Note Button */}
+                    <motion.button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddNote(day.date);
+                      }}
+                      className="w-full mb-3 p-2 flex items-center justify-center gap-2 rounded-lg border-2 border-dashed 
+                               border-gray-200 hover:border-yellow-400 hover:bg-yellow-50 transition-colors group"
+                    >
+                      <LightBulbIcon className="w-4 h-4 text-gray-400 group-hover:text-yellow-500" />
+                      <span className="text-sm text-gray-500 group-hover:text-yellow-700">
+                        Add note
+                      </span>
+                    </motion.button>
+
                     {/* Notes */}
                     <div className="space-y-2 mb-3">
                       {getNotesForDay(day.date).map((note) => (
@@ -441,13 +448,13 @@ export default function CalendarGrid({
                     {getEventsForDay(day.date).length === 0 &&
                       getNotesForDay(day.date).length === 0 && (
                         <motion.div
-                          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                          className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.2 }}
                         >
                           <p className="text-sm text-gray-400/70 font-medium">
-                            Tap to add event
+                            No events or notes
                           </p>
                         </motion.div>
                       )}
